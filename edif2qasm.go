@@ -44,18 +44,5 @@ func main() {
 	if !ok {
 		notify.Fatalf("Failed to parse the input as an s-expression")
 	}
-
-	// Convert the s-expression to a graph.
-	designs := ConvertEdifToNetlist(top)
-
-	// Convert the graph to a QUBO.
-	nd := 0
-	for nm, des := range designs {
-		if nd > 0 {
-			fmt.Println("")
-		}
-		nd++
-		fmt.Printf("# %s\n", nm)
-		des.Qubo().OutputText(os.Stdout)
-	}
+	_ = top // Temporary
 }
