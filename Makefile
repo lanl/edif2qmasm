@@ -10,24 +10,29 @@ PIGEON = pigeon
 
 all: edif2qasm
 
-EDIF2QUBO_SOURCES = \
+SOURCES = \
+	edif.go \
 	edif2qasm.go \
 	parse-edif.go \
-	sexptype_string.go
+	qasm.go \
+	sexptype_string.go \
+	walk-sexp.go
 
-edif2qasm: $(EDIF2QUBO_SOURCES)
-	$(GO) build -o edif2qasm $(EDIF2QUBO_SOURCES)
+SOURCES_NO_SEXPTYPE = $(subst sexptype_string.go,,$(SOURCES))
+
+edif2qasm: $(SOURCES)
+	$(GO) build -o edif2qasm $(SOURCES)
 
 parse-edif.go: parse-edif.peg
 	$(PIGEON) parse-edif.peg > parse-edif.tmp
 	goimports parse-edif.tmp | gofmt > parse-edif.go
 	$(RM) parse-edif.tmp
 
-sexptype_string.go: parse-edif.go
-	stringer -type=SExpType parse-edif.go
+sexptype_string.go: $(SOURCES_NO_SEXPTYPE)
+	stringer -type=SExpType $(SOURCES_NO_SEXPTYPE)
 
-vet-edif2qasm: $(EDIF2QUBO_SOURCES)
-	$(GO) vet $(EDIF2QUBO_SOURCES)
+vet-edif2qasm: $(SOURCES)
+	$(GO) vet $(SOURCES)
 
 clean:
 	$(RM) edif2qasm

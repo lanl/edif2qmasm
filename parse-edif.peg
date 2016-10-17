@@ -5,47 +5,6 @@
 
 package main
 
-// An SExpType represents the type of an EDIF s-expression.
-type SExpType int
-
-// These are the values an EDIF s-expression can take.
-const (
-	Symbol  SExpType = iota // Raw symbol
-	String                  // Quoted string
-	Integer                 // Integer
-	List                    // List of any of the above or other lists
-)
-
-// An EdifSExp represents an EDIF s-expression.  It is effectively a union of
-// various atom types and a list of atoms.
-type EdifSExp interface {
-	Type() SExpType // Return the type of this s-expression.
-}
-
-// An EdifSymbol represents a raw EDIF symbol.
-type EdifSymbol string
-
-// The type of an EdifSymbol is Symbol.
-func (s EdifSymbol) Type() SExpType { return Symbol }
-
-// An EdifString represents a quoted EDIF string.
-type EdifString string
-
-// The type of an EdifString is String.
-func (s EdifString) Type() SExpType { return String }
-
-// An EdifInteger represents an EDIF integer.
-type EdifInteger int
-
-// The type of an EdifInteger is Integer.
-func (s EdifInteger) Type() SExpType { return Integer }
-
-// An EdifList represents a list of EDIF s-expressions.
-type EdifList []EdifSExp
-
-// The type of an EdifList is List.
-func (s EdifList) Type() SExpType { return List }
-
 }
 
 // TopLevel matches the top-level s-expression.
