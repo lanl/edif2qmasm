@@ -88,3 +88,15 @@ type QasmBlank struct{}
 func (b QasmBlank) String() string {
 	return "\n"
 }
+
+// A QasmInclude includes an external QASM file.
+type QasmInclude struct {
+	File    string // Name of file to include
+	Comment string // Optional comment
+}
+
+// String outputs a QASM include with a trailing newline.  We assume the
+// external file exists in the user's QASMPATH.
+func (i QasmInclude) String() string {
+	return "!include <" + i.File + ">\n"
+}
