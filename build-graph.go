@@ -15,7 +15,7 @@ type CellAndCode struct {
 type CellLibrary map[EdifSymbol]CellAndCode
 
 // asSymbol asserts that an s-expression is a symbol, returning it if it is but
-// aborting the progam if it's not.
+// aborting the program if it's not.
 func asSymbol(s EdifSExp) EdifSymbol {
 	if s.Type() != Symbol {
 		notify.Fatalf("Expected a Symbol but received a %s (%v)", s.Type(), s)
@@ -23,7 +23,7 @@ func asSymbol(s EdifSExp) EdifSymbol {
 	return s.(EdifSymbol)
 }
 
-// asString asserts that an s-expression is a string, aborting the progam if
+// asString asserts that an s-expression is a string, aborting the program if
 // not.
 func asString(s EdifSExp) EdifString {
 	if s.Type() != String {
@@ -32,7 +32,7 @@ func asString(s EdifSExp) EdifString {
 	return s.(EdifString)
 }
 
-// asInteger asserts that an s-expression is an integer, aborting the progam if
+// asInteger asserts that an s-expression is an integer, aborting the program if
 // not.
 func asInteger(s EdifSExp) EdifInteger {
 	if s.Type() != Integer {
@@ -43,7 +43,7 @@ func asInteger(s EdifSExp) EdifInteger {
 
 // asList asserts that an s-expression is a list, contains a minimum number of
 // elements, and begins with a given keyword.  If so, it returns the list.
-// Otherwise, it aborts the progam.
+// Otherwise, it aborts the program.
 func asList(s EdifSExp, minElts int, keyw EdifSymbol) EdifList {
 	if s.Type() != List {
 		notify.Fatalf("Expected a [%s ...] List but received a %s (%v)", keyw, s.Type(), s)
