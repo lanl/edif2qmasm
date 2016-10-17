@@ -9,10 +9,10 @@ AWK = awk
 GO = go
 PIGEON = pigeon
 
-all: edif2qubo
+all: edif2qasm
 
 EDIF2QUBO_SOURCES = \
-	edif2qubo.go \
+	edif2qasm.go \
 	parse-edif.go \
 	build-graph.go \
 	netlist-types.go \
@@ -20,8 +20,8 @@ EDIF2QUBO_SOURCES = \
 	sexptype_string.go \
 	quboelttype_string.go
 
-edif2qubo: $(EDIF2QUBO_SOURCES)
-	$(GO) build -o edif2qubo $(EDIF2QUBO_SOURCES)
+edif2qasm: $(EDIF2QUBO_SOURCES)
+	$(GO) build -o edif2qasm $(EDIF2QUBO_SOURCES)
 
 parse-edif.go: parse-edif.peg
 	$(PIGEON) parse-edif.peg > parse-edif.tmp
@@ -31,8 +31,8 @@ parse-edif.go: parse-edif.peg
 sexptype_string.go: parse-edif.go
 	stringer -type=SExpType parse-edif.go
 
-quboelttype_string.go: qubos.go parse-edif.go edif2qubo.go build-graph.go netlist-types.go
-	stringer -type=QuboEltType qubos.go parse-edif.go edif2qubo.go build-graph.go netlist-types.go
+quboelttype_string.go: qubos.go parse-edif.go edif2qasm.go build-graph.go netlist-types.go
+	stringer -type=QuboEltType qubos.go parse-edif.go edif2qasm.go build-graph.go netlist-types.go
 
 netlist-types.go: netlist-types.tmpl generate-cells.awk
 	cp netlist-types.tmpl netlist-types.go
@@ -42,12 +42,12 @@ netlist-types.go: netlist-types.tmpl generate-cells.awk
 	$(AWK) -v TTAG=Mux -v TTEXT=multiplexer -f generate-cells.awk netlist-types.tmpl >> netlist-types.go
 	$(AWK) -v TTAG=User -v TTEXT=user-defined -f generate-cells.awk netlist-types.tmpl >> netlist-types.go
 
-vet-edif2qubo: $(EDIF2QUBO_SOURCES)
+vet-edif2qasm: $(EDIF2QUBO_SOURCES)
 	$(GO) vet $(EDIF2QUBO_SOURCES)
 
 clean:
-	$(RM) edif2qubo
+	$(RM) edif2qasm
 	$(RM) parse-edif.tmp parse-edif.go
 	$(RM) netlist-types.go sexptype_string.go quboelttype_string.go 
 
-.PHONY: all clean vet-edif2qubo
+.PHONY: all clean vet-edif2qasm

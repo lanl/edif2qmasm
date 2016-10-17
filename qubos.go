@@ -1,4 +1,4 @@
-// This file is part of edif2qubo.  It provides functions for manipulating
+// This file is part of edif2qasm.  It provides functions for manipulating
 // QUBOs.
 
 package main

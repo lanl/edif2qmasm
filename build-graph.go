@@ -1,4 +1,4 @@
-// This file is part of edif2qubo.  It constructs an internal graph
+// This file is part of edif2qasm.  It constructs an internal graph
 // representation of a netlist.
 
 package main

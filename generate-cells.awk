@@ -1,4 +1,4 @@
-# This file is needed to build edif2qubo.  It generates cells and cell
+# This file is needed to build edif2qasm.  It generates cells and cell
 # instances from templates defined in netlist-types.tmpl.
 #
 # Usage: awk -v TTAG=Vcc -v TTEXT=input-power -f generate-cells.awk netlist-types.tmpl
