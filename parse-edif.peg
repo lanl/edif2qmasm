@@ -1,0 +1,169 @@
+{
+// This file is part of edif2qubo.  It implements a parser for the Electronic
+// Design Interchange Format (EDIF).  It basically just reads an EDIF file into
+// a hierarchical format for later processing.
+
+package main
+
+// An SExpType represents the type of an EDIF s-expression.
+type SExpType int
+
+// These are the values an EDIF s-expression can take.
+const (
+	Symbol  SExpType = iota // Raw symbol
+	String                  // Quoted string
+	Integer                 // Integer
+	List                    // List of any of the above or other lists
+)
+
+// An EdifSExp represents an EDIF s-expression.  It is effectively a union of
+// various atom types and a list of atoms.
+type EdifSExp interface {
+	Type() SExpType // Return the type of this s-expression.
+}
+
+// An EdifSymbol represents a raw EDIF symbol.
+type EdifSymbol string
+
+// The type of an EdifSymbol is Symbol.
+func (s EdifSymbol) Type() SExpType { return Symbol }
+
+// An EdifString represents a quoted EDIF string.
+type EdifString string
+
+// The type of an EdifString is String.
+func (s EdifString) Type() SExpType { return String }
+
+// An EdifInteger represents an EDIF integer.
+type EdifInteger int
+
+// The type of an EdifInteger is Integer.
+func (s EdifInteger) Type() SExpType { return Integer }
+
+// An EdifList represents a list of EDIF s-expressions.
+type EdifList []EdifSExp
+
+// The type of an EdifList is List.
+func (s EdifList) Type() SExpType { return List }
+
+}
+
+// TopLevel matches the top-level s-expression.
+TopLevel <- Skip s:SExp Skip EOF {
+	sexp, ok := s.(EdifSExp)
+	if !ok {
+		return nil, fmt.Errorf("Failed to parse %q", c.text)
+	}
+	return sexp, nil
+}
+
+// Digit matches a single Unicode digit.
+Digit <- [\p{Nd}]
+
+// Whitespace matches a single code point of Unicode whitespace.
+Whitespace <- [\p{Zs}\n\r\t]
+
+// Skip represents material to ignore, for now just whitespace (zero or more).
+Skip <- Whitespace*
+
+// Symbol matches an EDIF symbol, here defined liberally as a letter or
+// underscore followed by any number of non-spaces, non-parentheses.
+Symbol <- [\p{Lu}\p{Ll}_] [^()\p{Zs}\n\r\t]* {
+	return EdifSymbol(c.text), nil
+}
+
+// Integer matches an integer.
+Integer <- [-+]? Digit+ {
+        num, err := strconv.Atoi(string(c.text))
+        if err != nil {
+                return nil, err
+        }
+	return EdifInteger(num), nil
+}
+
+// String matches a double-quoted string.  The string can contain escaped
+// double quotes.
+String <- '"' (EscapedChar / [^"])* '"' {
+	return EdifString(c.text[1 : len(c.text)-1]), nil
+}
+
+// EscapedChar matches a backslash followed by one of a particular set of
+// characters.
+EscapedChar <- '\\' . {
+	switch c.text[1] {
+	case '\\', '"':
+		return c.text[1], nil
+	case 'n':
+		return '\n', nil
+	case 't':
+		return '\t', nil
+	case 'r':
+		return '\r', nil
+	default:
+		return "", fmt.Errorf("Unrecognized escape sequence \"\\%c\"", c.text[1])
+	}
+}
+
+// List matches a parenthesized list of s-expressions.
+List <- '(' Skip ss:(SExp AnotherSExp*)? Skip ')' {
+	// Handle the trivial case first.
+	if ss == nil {
+		// Zero-element list
+		return make(EdifList, 0), nil
+	}
+
+	// On a failed assertion in the remaining cases, return an internal
+	// error to our parent.
+	return func() (data interface{}, err error) {
+		// Set up error handling.
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("Internal error parsing %q", c.text)
+			}
+		}()
+		var ok bool
+		checkAssert := func() {
+			if !ok {
+				panic("Internal edif.go parse error")
+			}
+		}
+
+		// We expect to have either a one- or two-element list of
+		// s-expressions.
+		ssList, ok := ss.([]interface{})
+		checkAssert()
+		if len(ssList) == 0 {
+			return nil, fmt.Errorf("Internal error: unexpected zero-element list")
+		}
+		ssHead, ok := ssList[0].(EdifSExp)
+		checkAssert()
+		if len(ssList) == 1 {
+			// One-element list
+			return []EdifSExp{ssHead}, nil
+		}
+		ssList, ok = ssList[1].([]interface{})
+		checkAssert()
+		sexps := make(EdifList, len(ssList)+1)
+		sexps[0] = ssHead
+		for i, s := range ssList {
+			sexps[i+1], ok = s.(EdifSExp)
+			checkAssert()
+		}
+		return sexps, nil
+	}()
+}
+
+// SExp matches any atom or a list.
+SExp <- Symbol / String / Integer / List
+
+// AnotherSExp matches an s-expression preceded by whitespace.
+AnotherSExp <- Whitespace+ s:SExp {
+	sexp, ok := s.(EdifSExp)
+	if !ok {
+		return nil, fmt.Errorf("Internal error parsing %#v", s)
+	}
+	return sexp, nil
+}
+
+// EOF matches the end of file.
+EOF <- !.
