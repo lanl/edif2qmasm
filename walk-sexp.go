@@ -173,7 +173,7 @@ func ConvertDesign(des EdifList) QasmMacroUse {
 	}
 	cRef := AsList(des[2], 3, "cellRef")
 	return QasmMacroUse{
-		MacroName: "$" + string(AsSymbol(cRef[1])),
+		MacroName: string(AsSymbol(cRef[1])),
 		UseName:   string(AsSymbol(des[1])),
 	}
 }
