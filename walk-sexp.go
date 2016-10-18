@@ -82,30 +82,95 @@ func ConvertInstance(inst EdifList, i2n map[EdifSymbol]EdifString) []QasmCode {
 	// Construct and return a macro instantiation.
 	code = append(code, QasmMacroUse{
 		MacroName: string(macroName),
-		UseName:   string(instSym),
+		UseName:   "$" + string(instSym),
 		Comment:   comment,
 	})
 
 	return code
 }
 
+// ConvertNet converts an EDIF net to a QASM chain ("=").
+func ConvertNet(net EdifList) QasmChain {
+	// Determine the name of each port.
+	portName := make([]string, 0, 2)
+	for _, pRef := range net.NestedSublistsByName([]EdifSymbol{
+		"joined",
+		"portRef",
+	}) {
+		switch len(pRef) {
+		case 2:
+			// Symbol is defined by the current macro.
+			portName = append(portName, string(AsSymbol(pRef[1])))
+
+		case 3:
+			// Symbol is defined by an instantiated macro.
+			pName := string(AsSymbol(pRef[1]))
+			instRef := AsList(pRef[2], 2, "instanceRef")
+			pName = "$" + string(AsSymbol(instRef[1])) + "." + pName
+			portName = append(portName, pName)
+
+		default:
+			notify.Fatalf("Expected 2 or 3 elements in a portRef; say %v", pRef)
+		}
+	}
+	if len(portName) != 2 {
+		notify.Fatalf("Expected a net to contain exactly two portRefs; saw %v", net)
+	}
+
+	// Treat a renamed net as a comment.
+	comment := ""
+	if net[1].Type() == List {
+		ren := AsList(net[1], 3, "rename")
+		comment = string(AsString(ren[2]))
+	}
+
+	// Return a QASM chain.
+	return QasmChain{
+		Var:     [2]string{portName[0], portName[1]},
+		Comment: comment,
+	}
+}
+
+// ConvertCell converts a user-defined cell to a QASM macro definition.
+func ConvertCell(cell EdifList, i2n map[EdifSymbol]EdifString) QasmMacroDef {
+	// Ensure the cell looks at least a little like what we expect.
+	if len(cell) < 3 {
+		notify.Fatalf("Cell %v contains too few components", cell)
+	}
+
+	// Instantiate all the other cells used by the current cell.
+	code := make([]QasmCode, 0, 32)
+	for _, inst := range cell.NestedSublistsByName([]EdifSymbol{
+		"view",
+		"contents",
+		"instance",
+	}) {
+		code = append(code, ConvertInstance(inst, i2n)...)
+	}
+
+	// Instantiate all the nets used by the current cell.
+	for _, net := range cell.NestedSublistsByName([]EdifSymbol{
+		"view",
+		"contents",
+		"net",
+	}) {
+		code = append(code, ConvertNet(net))
+	}
+
+	// Wrap the code in a QASM macro definition and return it.
+	return QasmMacroDef{
+		Name: string(AsSymbol(cell[1])),
+		Body: code,
+	}
+}
+
 // ConvertLibrary converts a user-defined cell library to QASM macro
 // definitions.
-func ConvertLibrary(l EdifList, i2n map[EdifSymbol]EdifString) []QasmCode {
+func ConvertLibrary(lib EdifList, i2n map[EdifSymbol]EdifString) []QasmCode {
 	// Iterate over each cell.
 	code := make([]QasmCode, 0, 32)
-	for _, cell := range l.SublistsByName("cell") {
-		// Convert each cell instantiated by the given cell to QASM.
-		if len(cell) < 3 {
-			notify.Fatal("Cell %v contains too few components", cell)
-		}
-		for _, inst := range cell.NestedSublistsByName([]EdifSymbol{
-			"view",
-			"contents",
-			"instance",
-		}) {
-			code = append(code, ConvertInstance(inst, i2n)...)
-		}
+	for _, cell := range lib.SublistsByName("cell") {
+		code = append(code, ConvertCell(cell, i2n))
 	}
 	return code
 }

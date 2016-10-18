@@ -14,22 +14,19 @@ type QasmCode interface {
 	String() string
 }
 
-// A QasmVar is a named QASM variable.
-type QasmVar string
-
 // A QasmChain indicates that two variables should be assigned the same value.
 type QasmChain struct {
-	Q1, Q2  QasmVar // Variables to equate
-	Comment string  // Optional comment
+	Var     [2]string // Variables to equate (no implied order)
+	Comment string    // Optional comment
 }
 
 // String outputs a QasmChain as a line of QASM code, including a training
 // newline.
 func (c QasmChain) String() string {
 	if c.Comment == "" {
-		return fmt.Sprintf("%s = %s\n", c.Q1, c.Q2)
+		return fmt.Sprintf("%s = %s\n", c.Var[0], c.Var[1])
 	} else {
-		return fmt.Sprintf("%s = %s  # %s\n", c.Q1, c.Q2, c.Comment)
+		return fmt.Sprintf("%s = %s  # %s\n", c.Var[0], c.Var[1], c.Comment)
 	}
 }
 

@@ -31,7 +31,7 @@ parse-edif.go: parse-edif.peg
 sexptype_string.go: $(SOURCES_NO_SEXPTYPE)
 	stringer -type=SExpType $(SOURCES_NO_SEXPTYPE)
 
-vet-edif2qasm: $(SOURCES)
+vet: $(SOURCES)
 	$(GO) vet $(SOURCES)
 
 clean:
@@ -39,4 +39,4 @@ clean:
 	$(RM) parse-edif.tmp parse-edif.go
 	$(RM) sexptype_string.go
 
-.PHONY: all clean vet-edif2qasm
+.PHONY: all clean vet
