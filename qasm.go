@@ -63,11 +63,11 @@ type QasmMacroUse struct {
 
 // String outputs a QASM macro use.
 func (u QasmMacroUse) String() string {
-	str := ""
+	str := "!use_macro " + u.MacroName + " " + u.UseName
 	if u.Comment != "" {
-		str += "# " + u.Comment + "\n"
+		str += "  # " + u.Comment
 	}
-	str += "!use_macro " + u.MacroName + " " + u.UseName
+	str += "\n"
 	return str
 }
 

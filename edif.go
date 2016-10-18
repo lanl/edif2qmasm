@@ -109,3 +109,21 @@ func (l EdifList) SublistsByName(keyw EdifSymbol) []EdifList {
 	}
 	return eltList
 }
+
+// NestedSublistsByName returns all sublists of the form "(<keyw> ...)"  that
+// are nested within "(<keyw1> (<keyw2> (<keyw3> ...)))".
+func (l EdifList) NestedSublistsByName(kws []EdifSymbol) []EdifList {
+	switch len(kws) {
+	case 0:
+		return nil
+	case 1:
+		return l.SublistsByName(kws[0])
+	default:
+		subLists := make([]EdifList, 0)
+		for _, outerList := range l.SublistsByName(kws[0]) {
+			innerLists := outerList.NestedSublistsByName(kws[1:])
+			subLists = append(subLists, innerLists...)
+		}
+		return subLists
+	}
+}

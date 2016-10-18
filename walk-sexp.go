@@ -36,10 +36,9 @@ func CanonicalizeCellName(s EdifString) EdifString {
 
 // ProcessExternalLib examines external-library imports and returns a map from
 // cell ID to cell name.
-func ProcessExternalLib(s EdifSExp) map[EdifSymbol]EdifString {
+func ProcessExternalLib(e EdifList) map[EdifSymbol]EdifString {
 	idToName := make(map[EdifSymbol]EdifString, 8)
-	ext := AsList(s, 2, "external")
-	for _, cell := range ext.SublistsByName("cell") {
+	for _, cell := range e.SublistsByName("cell") {
 		cnm := cell[1]
 		if cnm.Type() != List {
 			continue // Symbols don't need to be mapped.
@@ -48,6 +47,67 @@ func ProcessExternalLib(s EdifSExp) map[EdifSymbol]EdifString {
 		idToName[AsSymbol(rnm[1])] = CanonicalizeCellName(AsString(rnm[2]))
 	}
 	return idToName
+}
+
+// ConvertInstance converts an instantiated cell to a QASM macro instantiation.
+func ConvertInstance(inst EdifList, i2n map[EdifSymbol]EdifString) []QasmCode {
+	// Extract the instantiation name.
+	code := make([]QasmCode, 0, 2)
+	var instSym EdifSymbol // Instantiated macro name
+	var comment string     // Comment describing the instantiation
+	switch inst[1].Type() {
+	case Symbol:
+		instSym = AsSymbol(inst[1])
+		if instSym == "GND" || instSym == "VCC" {
+			return nil // GND and VCC are treated specially.
+		}
+
+	case List:
+		ren := AsList(inst[1], 3, "rename")
+		instSym = AsSymbol(ren[1])
+		comment = string(AsString(ren[2]))
+	}
+
+	// Extract the macro name.
+	var macroName EdifSymbol
+	cRef := inst.NestedSublistsByName([]EdifSymbol{
+		"viewRef",
+		"cellRef",
+	})[0]
+	macroName = AsSymbol(cRef[1])
+	if cName, ok := i2n[macroName]; ok {
+		macroName = EdifSymbol(cName) // Renamed cell (e.g., "id0123" --> "AND")
+	}
+
+	// Construct and return a macro instantiation.
+	code = append(code, QasmMacroUse{
+		MacroName: string(macroName),
+		UseName:   string(instSym),
+		Comment:   comment,
+	})
+
+	return code
+}
+
+// ConvertLibrary converts a user-defined cell library to QASM macro
+// definitions.
+func ConvertLibrary(l EdifList, i2n map[EdifSymbol]EdifString) []QasmCode {
+	// Iterate over each cell.
+	code := make([]QasmCode, 0, 32)
+	for _, cell := range l.SublistsByName("cell") {
+		// Convert each cell instantiated by the given cell to QASM.
+		if len(cell) < 3 {
+			notify.Fatal("Cell %v contains too few components", cell)
+		}
+		for _, inst := range cell.NestedSublistsByName([]EdifSymbol{
+			"view",
+			"contents",
+			"instance",
+		}) {
+			code = append(code, ConvertInstance(inst, i2n)...)
+		}
+	}
+	return code
 }
 
 // ConvertEdifToQasm takes an EDIF s-expression and returns a list of QASM
@@ -66,6 +126,12 @@ func ConvertEdifToQasm(s EdifSExp) []QasmCode {
 		for id, nm := range ProcessExternalLib(ext) {
 			idToName[id] = nm
 		}
+	}
+
+	// Convert each user-defined library in turn.
+	for _, lib := range slst.SublistsByName("library") {
+		code = append(code, QasmBlank{})
+		code = append(code, ConvertLibrary(lib, idToName)...)
 	}
 
 	return code
