@@ -50,9 +50,11 @@ func ProcessExternalLib(e EdifList) map[EdifSymbol]EdifString {
 }
 
 // ConvertInstance converts an instantiated cell to a QASM macro instantiation.
+// This function returns a slice rather than an individual QasmMacroUse because
+// it may need to return an empty slice (in the case of VCC and GND).
 func ConvertInstance(inst EdifList, i2n map[EdifSymbol]EdifString) []QasmCode {
 	// Extract the instantiation name.
-	code := make([]QasmCode, 0, 2)
+	code := make([]QasmCode, 0, 1)
 	var instSym EdifSymbol // Instantiated macro name
 	var comment string     // Comment describing the instantiation
 	switch inst[1].Type() {
@@ -164,6 +166,18 @@ func ConvertCell(cell EdifList, i2n map[EdifSymbol]EdifString) QasmMacroDef {
 	}
 }
 
+// ConvertDesign converts a design to a QASM macro instantiation.
+func ConvertDesign(des EdifList) QasmMacroUse {
+	if len(des) != 3 {
+		notify.Fatalf("Expected a design to contain exactly 3 elements but saw %v", des)
+	}
+	cRef := AsList(des[2], 3, "cellRef")
+	return QasmMacroUse{
+		MacroName: "$" + string(AsSymbol(cRef[1])),
+		UseName:   string(AsSymbol(des[1])),
+	}
+}
+
 // ConvertLibrary converts a user-defined cell library to QASM macro
 // definitions.
 func ConvertLibrary(lib EdifList, i2n map[EdifSymbol]EdifString) []QasmCode {
@@ -197,6 +211,12 @@ func ConvertEdifToQasm(s EdifSExp) []QasmCode {
 	for _, lib := range slst.SublistsByName("library") {
 		code = append(code, QasmBlank{})
 		code = append(code, ConvertLibrary(lib, idToName)...)
+	}
+
+	// Convert each design in turn.
+	for _, des := range slst.SublistsByName("design") {
+		code = append(code, QasmBlank{})
+		code = append(code, ConvertDesign(des))
 	}
 
 	return code
