@@ -98,36 +98,38 @@ func ConvertInstance(inst EdifList, i2n map[EdifSymbol]EdifString) []QasmCode {
 // PortRefToString converts an EDIF portRef to a string.  This is a helper
 // function for ConvertNet.
 func PortRefToString(pRef EdifList) string {
-	switch len(pRef) {
-	case 2:
-		// Symbol is defined by the current macro.  Return as is.
-		switch pRef[1].Type() {
-		case Symbol:
-			// Single-bit
-			return string(AsSymbol(pRef[1]))
+	// We can handle only 2- or 3-element portRefs.
+	nParts := len(pRef)
+	if nParts != 2 && nParts != 3 {
+		notify.Fatalf("Expected 2 or 3 elements in a portRef; saw %v", pRef)
+	}
 
-		case List:
-			// Index into a multi-bit port.  Return as
-			// "symbol[port]".
-			memb := AsList(pRef[1], 3, "member")
-			base := AsSymbol(memb[1])
-			idx := AsInteger(memb[2])
-			return fmt.Sprintf("%s[%d]", base, idx)
+	// The first element after "portRef" is the port name.
+	var pName string
+	switch pRef[1].Type() {
+	case Symbol:
+		// Single-bit
+		pName = string(AsSymbol(pRef[1]))
 
-		default:
-			notify.Fatalf("Expected a symbol or list in portRef but saw %v", pRef)
-		}
-
-	case 3:
-		// Symbol is defined by an instantiated macro.
-		pName := string(AsSymbol(pRef[1]))
-		instRef := AsList(pRef[2], 2, "instanceRef")
-		return "$" + string(AsSymbol(instRef[1])) + "." + pName
+	case List:
+		// Index into a multi-bit port.  Return as
+		// "symbol[port]".
+		memb := AsList(pRef[1], 3, "member")
+		base := AsSymbol(memb[1])
+		idx := AsInteger(memb[2])
+		pName = fmt.Sprintf("%s[%d]", base, idx)
 
 	default:
-		notify.Fatalf("Expected 2 or 3 elements in a portRef; say %v", pRef)
+		notify.Fatalf("Expected a symbol or list in portRef but saw %v", pRef)
 	}
-	return "[ERROR]" // Should never get here.
+
+	// If provided, the second element after "portRef" is the cell the port
+	// belongs to.
+	if nParts > 2 {
+		instRef := AsList(pRef[2], 2, "instanceRef")
+		pName = "$" + string(AsSymbol(instRef[1])) + "." + pName
+	}
+	return pName
 }
 
 // ConvertNet converts an EDIF net to a QASM chain ("=").
@@ -141,7 +143,9 @@ func ConvertNet(net EdifList) []QasmCode {
 		portName = append(portName, PortRefToString(pRef))
 	}
 	if len(portName) < 2 {
-		notify.Fatalf("Expected a net to contain at least two portRefs; saw %v", net)
+		// I don't know what a single-portRef net is supposed to do so
+		// I'm guessing we can ignore it.
+		return nil
 	}
 
 	// Treat a renamed net as a comment.
