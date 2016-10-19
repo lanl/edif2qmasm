@@ -131,7 +131,7 @@ func PortRefToString(pRef EdifList) string {
 }
 
 // ConvertNet converts an EDIF net to a QASM chain ("=").
-func ConvertNet(net EdifList) QasmChain {
+func ConvertNet(net EdifList) []QasmCode {
 	// Determine the name of each port.
 	portName := make([]string, 0, 2)
 	for _, pRef := range net.NestedSublistsByName([]EdifSymbol{
@@ -140,8 +140,8 @@ func ConvertNet(net EdifList) QasmChain {
 	}) {
 		portName = append(portName, PortRefToString(pRef))
 	}
-	if len(portName) != 2 {
-		notify.Fatalf("Expected a net to contain exactly two portRefs; saw %v", net)
+	if len(portName) < 2 {
+		notify.Fatalf("Expected a net to contain at least two portRefs; saw %v", net)
 	}
 
 	// Treat a renamed net as a comment.
@@ -151,11 +151,18 @@ func ConvertNet(net EdifList) QasmChain {
 		comment = string(AsString(ren[2]))
 	}
 
-	// Return a QASM chain.
-	return QasmChain{
-		Var:     [2]string{portName[0], portName[1]},
-		Comment: comment,
+	// Return one or more QASM chains.
+	nPorts := len(portName)
+	code := make([]QasmCode, 0, (nPorts*(nPorts-1))/2)
+	for i := 0; i < nPorts-1; i++ {
+		for j := i + 1; j < nPorts; j++ {
+			code = append(code, QasmChain{
+				Var:     [2]string{portName[i], portName[j]},
+				Comment: comment,
+			})
+		}
 	}
+	return code
 }
 
 // ConvertCell converts a user-defined cell to a QASM macro definition.
@@ -181,7 +188,7 @@ func ConvertCell(cell EdifList, i2n map[EdifSymbol]EdifString) QasmMacroDef {
 		"contents",
 		"net",
 	}) {
-		code = append(code, ConvertNet(net))
+		code = append(code, ConvertNet(net)...)
 	}
 
 	// Wrap the code in a QASM macro definition and return it.

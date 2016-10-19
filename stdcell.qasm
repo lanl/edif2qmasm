@@ -35,3 +35,18 @@ B Y -0.2222
 !begin_macro NOT
 A Y 1.0
 !end_macro NOT
+
+# Y = A XOR B
+!begin_macro XOR
+A    0.0714
+B   -0.0714
+Y   -0.0714
+$a1 -0.1429
+
+A B   -0.0714
+A Y   -0.0714
+A $a1 -0.1429
+B Y    0.0714
+B $a1  0.1429
+Y $a1  0.1429
+!end_macro XOR
