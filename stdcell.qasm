@@ -20,6 +20,17 @@ A Y -0.2222
 B Y -0.2222
 !end_macro AND
 
+# Y = A OR B
+!begin_macro OR
+A  0.1111
+B  0.1111
+Y -0.2222
+
+A B  0.1111
+A Y -0.2222
+B Y -0.2222
+!end_macro OR
+
 # Y = NOT A
 !begin_macro NOT
 A Y 1.0

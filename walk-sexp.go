@@ -3,6 +3,10 @@
 
 package main
 
+import (
+	"fmt"
+)
+
 // ConvertMetadata converts top-level metadata to QASM.
 func ConvertMetadata(s EdifSExp) []QasmCode {
 	hdr := make([]QasmCode, 0, 1)
@@ -91,6 +95,41 @@ func ConvertInstance(inst EdifList, i2n map[EdifSymbol]EdifString) []QasmCode {
 	return code
 }
 
+// PortRefToString converts an EDIF portRef to a string.  This is a helper
+// function for ConvertNet.
+func PortRefToString(pRef EdifList) string {
+	switch len(pRef) {
+	case 2:
+		// Symbol is defined by the current macro.  Return as is.
+		switch pRef[1].Type() {
+		case Symbol:
+			// Single-bit
+			return string(AsSymbol(pRef[1]))
+
+		case List:
+			// Index into a multi-bit port.  Return as
+			// "symbol[port]".
+			memb := AsList(pRef[1], 3, "member")
+			base := AsSymbol(memb[1])
+			idx := AsInteger(memb[2])
+			return fmt.Sprintf("%s[%d]", base, idx)
+
+		default:
+			notify.Fatalf("Expected a symbol or list in portRef but saw %v", pRef)
+		}
+
+	case 3:
+		// Symbol is defined by an instantiated macro.
+		pName := string(AsSymbol(pRef[1]))
+		instRef := AsList(pRef[2], 2, "instanceRef")
+		return "$" + string(AsSymbol(instRef[1])) + "." + pName
+
+	default:
+		notify.Fatalf("Expected 2 or 3 elements in a portRef; say %v", pRef)
+	}
+	return "[ERROR]" // Should never get here.
+}
+
 // ConvertNet converts an EDIF net to a QASM chain ("=").
 func ConvertNet(net EdifList) QasmChain {
 	// Determine the name of each port.
@@ -99,21 +138,7 @@ func ConvertNet(net EdifList) QasmChain {
 		"joined",
 		"portRef",
 	}) {
-		switch len(pRef) {
-		case 2:
-			// Symbol is defined by the current macro.
-			portName = append(portName, string(AsSymbol(pRef[1])))
-
-		case 3:
-			// Symbol is defined by an instantiated macro.
-			pName := string(AsSymbol(pRef[1]))
-			instRef := AsList(pRef[2], 2, "instanceRef")
-			pName = "$" + string(AsSymbol(instRef[1])) + "." + pName
-			portName = append(portName, pName)
-
-		default:
-			notify.Fatalf("Expected 2 or 3 elements in a portRef; say %v", pRef)
-		}
+		portName = append(portName, PortRefToString(pRef))
 	}
 	if len(portName) != 2 {
 		notify.Fatalf("Expected a net to contain exactly two portRefs; saw %v", net)
