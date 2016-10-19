@@ -97,3 +97,24 @@ type QasmInclude struct {
 func (i QasmInclude) String() string {
 	return "!include <" + i.File + ">\n"
 }
+
+// A QasmPin indicates that variables should be pinned to either TRUE or FALSE.
+type QasmPin struct {
+	Var     string // Variable to pin
+	Value   bool   // Value to assign to the variable
+	Comment string // Optional comment
+}
+
+// String outputs a QasmPin as a line of QASM code, including a training
+// newline.
+func (p QasmPin) String() string {
+	b2s := map[bool]string{
+		false: "GND",
+		true:  "VCC",
+	}
+	if p.Comment == "" {
+		return fmt.Sprintf("%s := %s\n", p.Var, b2s[p.Value])
+	} else {
+		return fmt.Sprintf("%s := %s  # %s\n", p.Var, b2s[p.Value], p.Comment)
+	}
+}

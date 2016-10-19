@@ -155,15 +155,44 @@ func ConvertNet(net EdifList) []QasmCode {
 		comment = string(AsString(ren[2]))
 	}
 
-	// Return one or more QASM chains.
+	// Return one or more QASM chains/pins.
 	nPorts := len(portName)
 	code := make([]QasmCode, 0, (nPorts*(nPorts-1))/2)
+	special := map[string]bool{
+		"$GND.G": false,
+		"$VCC.P": true,
+	}
 	for i := 0; i < nPorts-1; i++ {
 		for j := i + 1; j < nPorts; j++ {
-			code = append(code, QasmChain{
-				Var:     [2]string{portName[i], portName[j]},
-				Comment: comment,
-			})
+			i_val, i_pinned := special[portName[j]]
+			j_val, j_pinned := special[portName[i]]
+			switch {
+			case !i_pinned && !j_pinned:
+				// Neither port is VCC or GND.
+				code = append(code, QasmChain{
+					Var:     [2]string{portName[i], portName[j]},
+					Comment: comment,
+				})
+
+			case i_pinned && !j_pinned:
+				// Only port i is VCC or GND.
+				code = append(code, QasmPin{
+					Var:     portName[i],
+					Value:   i_val,
+					Comment: comment,
+				})
+
+			case !i_pinned && j_pinned:
+				// Only port j is VCC or GND.
+				code = append(code, QasmPin{
+					Var:     portName[j],
+					Value:   j_val,
+					Comment: comment,
+				})
+
+			default:
+				notify.Fatalf("Unexpected connection in net %v", net)
+			}
 		}
 	}
 	return code

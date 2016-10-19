@@ -50,3 +50,7 @@ B Y    0.0714
 B $a1  0.1429
 Y $a1  0.1429
 !end_macro XOR
+
+# Constants for power and ground.
+!alias VCC true
+!alias GND false
