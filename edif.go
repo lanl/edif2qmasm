@@ -1,4 +1,4 @@
-// This file is part of edif2qasm.  It abstracts an EDIF s-expression into a
+// This file is part of edif2qmasm.  It abstracts an EDIF s-expression into a
 // form that's easier to manipulate.
 
 package main

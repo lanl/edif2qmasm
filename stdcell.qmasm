@@ -1,7 +1,7 @@
 ###################################
-# QASM standard-cell library	  #
-# for use with edif2qasm	  #
-#				  #
+# QMASM standard-cell library     #
+# for use with edif2qmasm         #
+#                                 #
 # By Scott Pakin <pakin@lanl.gov> #
 ###################################
 

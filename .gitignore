@@ -1,3 +1,3 @@
-edif2qasm
+edif2qmasm
 parse-edif.go
 sexptype_string.go

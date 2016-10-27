@@ -1,5 +1,5 @@
-// This file is part of edif2qasm.  It provides functions for walking an EDIF
-// s-expression, converting it to QASM format.
+// This file is part of edif2qmasm.  It provides functions for walking an EDIF
+// s-expression, converting it to QMASM format.
 
 package main
 
@@ -7,21 +7,21 @@ import (
 	"fmt"
 )
 
-// ConvertMetadata converts top-level metadata to QASM.
-func ConvertMetadata(s EdifSExp) []QasmCode {
-	hdr := make([]QasmCode, 0, 1)
+// ConvertMetadata converts top-level metadata to QMASM.
+func ConvertMetadata(s EdifSExp) []QmasmCode {
+	hdr := make([]QmasmCode, 0, 1)
 	el := AsList(s, 1, "edif")
-	hdr = append(hdr, QasmComment{
+	hdr = append(hdr, QmasmComment{
 		Comment: "Module " + string(AsSymbol(el[1]))},
 	)
 	cmts := el.SublistsByName("comment")
 	for _, c := range cmts {
-		hdr = append(hdr, QasmComment{
+		hdr = append(hdr, QmasmComment{
 			Comment: string(AsString(c[1])),
 		})
 	}
-	hdr = append(hdr, QasmComment{
-		Comment: "Converted to QASM by edif2qasm",
+	hdr = append(hdr, QmasmComment{
+		Comment: "Converted to QMASM by edif2qmasm",
 	})
 	return hdr
 }
@@ -53,12 +53,12 @@ func ProcessExternalLib(e EdifList) map[EdifSymbol]EdifString {
 	return idToName
 }
 
-// ConvertInstance converts an instantiated cell to a QASM macro instantiation.
-// This function returns a slice rather than an individual QasmMacroUse because
+// ConvertInstance converts an instantiated cell to a QMASM macro instantiation.
+// This function returns a slice rather than an individual QmasmMacroUse because
 // it may need to return an empty slice (in the case of VCC and GND).
-func ConvertInstance(inst EdifList, i2n map[EdifSymbol]EdifString) []QasmCode {
+func ConvertInstance(inst EdifList, i2n map[EdifSymbol]EdifString) []QmasmCode {
 	// Extract the instantiation name.
-	code := make([]QasmCode, 0, 1)
+	code := make([]QmasmCode, 0, 1)
 	var instSym EdifSymbol // Instantiated macro name
 	var comment string     // Comment describing the instantiation
 	switch inst[1].Type() {
@@ -86,7 +86,7 @@ func ConvertInstance(inst EdifList, i2n map[EdifSymbol]EdifString) []QasmCode {
 	}
 
 	// Construct and return a macro instantiation.
-	code = append(code, QasmMacroUse{
+	code = append(code, QmasmMacroUse{
 		MacroName: string(macroName),
 		UseName:   "$" + string(instSym),
 		Comment:   comment,
@@ -132,8 +132,8 @@ func PortRefToString(pRef EdifList) string {
 	return pName
 }
 
-// ConvertNet converts an EDIF net to a QASM chain ("=").
-func ConvertNet(net EdifList) []QasmCode {
+// ConvertNet converts an EDIF net to a QMASM chain ("=").
+func ConvertNet(net EdifList) []QmasmCode {
 	// Determine the name of each port.
 	portName := make([]string, 0, 2)
 	for _, pRef := range net.NestedSublistsByName([]EdifSymbol{
@@ -155,9 +155,9 @@ func ConvertNet(net EdifList) []QasmCode {
 		comment = string(AsString(ren[2]))
 	}
 
-	// Return one or more QASM chains/pins.
+	// Return one or more QMASM chains/pins.
 	nPorts := len(portName)
-	code := make([]QasmCode, 0, (nPorts*(nPorts-1))/2)
+	code := make([]QmasmCode, 0, (nPorts*(nPorts-1))/2)
 	special := map[string]bool{
 		"$GND.G": false,
 		"$VCC.P": true,
@@ -169,14 +169,14 @@ func ConvertNet(net EdifList) []QasmCode {
 			switch {
 			case !i_pinned && !j_pinned:
 				// Neither port is VCC or GND.
-				code = append(code, QasmChain{
+				code = append(code, QmasmChain{
 					Var:     [2]string{portName[i], portName[j]},
 					Comment: comment,
 				})
 
 			case i_pinned && !j_pinned:
 				// Only port i is VCC or GND.
-				code = append(code, QasmPin{
+				code = append(code, QmasmPin{
 					Var:     portName[i],
 					Value:   i_val,
 					Comment: comment,
@@ -184,7 +184,7 @@ func ConvertNet(net EdifList) []QasmCode {
 
 			case !i_pinned && j_pinned:
 				// Only port j is VCC or GND.
-				code = append(code, QasmPin{
+				code = append(code, QmasmPin{
 					Var:     portName[j],
 					Value:   j_val,
 					Comment: comment,
@@ -198,15 +198,15 @@ func ConvertNet(net EdifList) []QasmCode {
 	return code
 }
 
-// ConvertCell converts a user-defined cell to a QASM macro definition.
-func ConvertCell(cell EdifList, i2n map[EdifSymbol]EdifString) QasmMacroDef {
+// ConvertCell converts a user-defined cell to a QMASM macro definition.
+func ConvertCell(cell EdifList, i2n map[EdifSymbol]EdifString) QmasmMacroDef {
 	// Ensure the cell looks at least a little like what we expect.
 	if len(cell) < 3 {
 		notify.Fatalf("Cell %v contains too few components", cell)
 	}
 
 	// Instantiate all the other cells used by the current cell.
-	code := make([]QasmCode, 0, 32)
+	code := make([]QmasmCode, 0, 32)
 	for _, inst := range cell.NestedSublistsByName([]EdifSymbol{
 		"view",
 		"contents",
@@ -224,44 +224,44 @@ func ConvertCell(cell EdifList, i2n map[EdifSymbol]EdifString) QasmMacroDef {
 		code = append(code, ConvertNet(net)...)
 	}
 
-	// Wrap the code in a QASM macro definition and return it.
-	return QasmMacroDef{
+	// Wrap the code in a QMASM macro definition and return it.
+	return QmasmMacroDef{
 		Name: string(AsSymbol(cell[1])),
 		Body: code,
 	}
 }
 
-// ConvertDesign converts a design to a QASM macro instantiation.
-func ConvertDesign(des EdifList) QasmMacroUse {
+// ConvertDesign converts a design to a QMASM macro instantiation.
+func ConvertDesign(des EdifList) QmasmMacroUse {
 	if len(des) != 3 {
 		notify.Fatalf("Expected a design to contain exactly 3 elements but saw %v", des)
 	}
 	cRef := AsList(des[2], 3, "cellRef")
-	return QasmMacroUse{
+	return QmasmMacroUse{
 		MacroName: string(AsSymbol(cRef[1])),
 		UseName:   string(AsSymbol(des[1])),
 	}
 }
 
-// ConvertLibrary converts a user-defined cell library to QASM macro
+// ConvertLibrary converts a user-defined cell library to QMASM macro
 // definitions.
-func ConvertLibrary(lib EdifList, i2n map[EdifSymbol]EdifString) []QasmCode {
+func ConvertLibrary(lib EdifList, i2n map[EdifSymbol]EdifString) []QmasmCode {
 	// Iterate over each cell.
-	code := make([]QasmCode, 0, 32)
+	code := make([]QmasmCode, 0, 32)
 	for _, cell := range lib.SublistsByName("cell") {
 		code = append(code, ConvertCell(cell, i2n))
 	}
 	return code
 }
 
-// ConvertEdifToQasm takes an EDIF s-expression and returns a list of QASM
+// ConvertEdifToQmasm takes an EDIF s-expression and returns a list of QMASM
 // statements.
-func ConvertEdifToQasm(s EdifSExp) []QasmCode {
-	// Produce a QASM header block.
-	code := make([]QasmCode, 0, 128)
+func ConvertEdifToQmasm(s EdifSExp) []QmasmCode {
+	// Produce a QMASM header block.
+	code := make([]QmasmCode, 0, 128)
 	code = append(code, ConvertMetadata(s)...)
-	code = append(code, QasmBlank{})
-	code = append(code, QasmInclude{File: "stdcell"})
+	code = append(code, QmasmBlank{})
+	code = append(code, QmasmInclude{File: "stdcell"})
 
 	// Generate a mapping from cell ID to cell name.
 	idToName := make(map[EdifSymbol]EdifString, 8)
@@ -274,13 +274,13 @@ func ConvertEdifToQasm(s EdifSExp) []QasmCode {
 
 	// Convert each user-defined library in turn.
 	for _, lib := range slst.SublistsByName("library") {
-		code = append(code, QasmBlank{})
+		code = append(code, QmasmBlank{})
 		code = append(code, ConvertLibrary(lib, idToName)...)
 	}
 
 	// Convert each design in turn.
 	for _, des := range slst.SublistsByName("design") {
-		code = append(code, QasmBlank{})
+		code = append(code, QmasmBlank{})
 		code = append(code, ConvertDesign(des))
 	}
 

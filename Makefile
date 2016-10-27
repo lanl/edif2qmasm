@@ -1,27 +1,27 @@
-##########################################
-# Build edif2qasm, a converter from EDIF #
-# netlists to LANL's QASM representation #
-#					 #
-# By Scott Pakin <pakin@lanl.gov>        #
-##########################################
+###########################################
+# Build edif2qmasm, a converter from EDIF #
+# netlists to LANL's QMASM representation #
+#					  #
+# By Scott Pakin <pakin@lanl.gov>         #
+###########################################
 
 GO = go
 PIGEON = pigeon
 
-all: edif2qasm
+all: edif2qmasm
 
 SOURCES = \
 	edif.go \
-	edif2qasm.go \
+	edif2qmasm.go \
 	parse-edif.go \
-	qasm.go \
+	qmasm.go \
 	sexptype_string.go \
 	walk-sexp.go
 
 SOURCES_NO_SEXPTYPE = $(subst sexptype_string.go,,$(SOURCES))
 
-edif2qasm: $(SOURCES)
-	$(GO) build -o edif2qasm $(SOURCES)
+edif2qmasm: $(SOURCES)
+	$(GO) build -o edif2qmasm $(SOURCES)
 
 parse-edif.go: parse-edif.peg
 	$(PIGEON) parse-edif.peg > parse-edif.tmp
@@ -35,7 +35,7 @@ vet: $(SOURCES)
 	$(GO) vet $(SOURCES)
 
 clean:
-	$(RM) edif2qasm
+	$(RM) edif2qmasm
 	$(RM) parse-edif.tmp parse-edif.go
 	$(RM) sexptype_string.go
 

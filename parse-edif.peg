@@ -1,5 +1,5 @@
 {
-// This file is part of edif2qasm.  It implements a parser for the Electronic
+// This file is part of edif2qmasm.  It implements a parser for the Electronic
 // Design Interchange Format (EDIF).  It basically just reads an EDIF file into
 // a hierarchical format for later processing.
 

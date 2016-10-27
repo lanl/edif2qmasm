@@ -1,5 +1,5 @@
 // edif2qubits is a program that converts an EDIF file into LANL's
-// QASM format for execution on a quantum annealer.
+// QMASM format for execution on a quantum annealer.
 package main
 
 import (
@@ -45,8 +45,8 @@ func main() {
 		notify.Fatalf("Failed to parse the input as an s-expression")
 	}
 
-	// Convert the s-expression to QASM source code.
-	code := ConvertEdifToQasm(top)
+	// Convert the s-expression to QMASM source code.
+	code := ConvertEdifToQmasm(top)
 	for _, q := range code {
 		fmt.Printf("%s", q)
 	}
