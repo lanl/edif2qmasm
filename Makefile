@@ -5,8 +5,13 @@
 # By Scott Pakin <pakin@lanl.gov>         #
 ###########################################
 
+# Modify the following as needed.
+prefix = /usr/local
+bindir = $(prefix)/bin
+sharedir = $(prefix)/share/edif2qmasm
 GO = go
 PIGEON = pigeon
+INSTALL = install
 
 all: edif2qmasm
 
@@ -39,4 +44,10 @@ clean:
 	$(RM) parse-edif.tmp parse-edif.go
 	$(RM) sexptype_string.go
 
-.PHONY: all clean vet
+install: edif2qmasm stdcell.qmasm
+	$(INSTALL) -m 0755 -d $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 edif2qmasm $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 -d $(DESTDIR)$(sharedir)
+	$(INSTALL) -m 0644 stdcell.qmasm $(DESTDIR)$(sharedir)
+
+.PHONY: all clean vet install
