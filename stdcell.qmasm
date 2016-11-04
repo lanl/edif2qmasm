@@ -5,73 +5,74 @@
 # By Scott Pakin <pakin@lanl.gov> #
 ###################################
 
-# N.B. Weights and strengths are currently scaled so that the sum of
-# their absolute values is 1.0.  This may change in a future version
-# of this library.
+# N.B. Weights and strengths are currently scaled so that the maximum
+# absolute value is 1.0.  This may change in a future version of this
+# library.
 
 # Y = A AND B
 !begin_macro AND
-A -0.1111
-B -0.1111
-Y  0.2222
+  A -0.5
+  B -0.5
+  C  1
 
-A B  0.1111
-A Y -0.2222
-B Y -0.2222
+  A B  0.5
+  A C -1
+  B C -1
 !end_macro AND
 
 # Y = A OR B
 !begin_macro OR
-A  0.1111
-B  0.1111
-Y -0.2222
+  A  0.5
+  B  0.5
+  Y -1
 
-A B  0.1111
-A Y -0.2222
-B Y -0.2222
+  A B  0.5
+  A Y -1
+  B Y -1
 !end_macro OR
 
 # Y = NOT A
 !begin_macro NOT
-A Y 1.0
+  A Y 1.0
 !end_macro NOT
 
 # Y = A XOR B
 !begin_macro XOR
-A    0.0714
-B   -0.0714
-Y   -0.0714
-$a1 -0.1429
+  A    0.5
+  B    0.5
+  Y    0.5
+  $a1 -1
 
-A B   -0.0714
-A Y   -0.0714
-A $a1 -0.1429
-B Y    0.0714
-B $a1  0.1429
-Y $a1  0.1429
+  A B    0.5
+  A Y    0.5
+  A $a1 -1
+  B Y    0.5
+  B $a1 -1
+  Y $a1 -1
 !end_macro XOR
 
 # Y = S ? B : A
 !begin_macro MUX
-S   -0.0877
-A   -0.0175
-B   -0.0351
-Y   -0.0175
-$a1  0.0702
-$a2  0.0877
+  A    0.65
+  B   -0.325
+  C    0.65
+  Y   -0.65
+  $a1 -0.625
+  $a2 -1
 
-S   A    0.0175
-S   B    0.0351
-S   Y    0.0175
-S   $a1 -0.0702
-S   $a2 -0.0877
-A   Y   -0.0702
-A   $a1 -0.0877
-A   $a2  0.0526
-B   $a2 -0.0702
-Y   $a1  0.0526
-Y   $a2 -0.0877
-$a1 $a2 -0.0351
+  A   B   -0.325
+  A   C    0.325
+  A   Y   -0.65
+  A   $a1 -1
+  A   $a2 -0.3
+  B   $a1  1
+  B   $a2 -0.35
+  C   Y   -0.65
+  C   $a1  0.025
+  C   $a2 -1
+  Y   $a1  0.65
+  Y   $a2  0.65
+  $a1 $a2 -0.75
 !end_macro MUX
 
 # Constants for power and ground.
