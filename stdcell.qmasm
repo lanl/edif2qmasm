@@ -13,11 +13,11 @@
 !begin_macro AND
   A -0.5
   B -0.5
-  C  1
+  Y  1
 
   A B  0.5
-  A C -1
-  B C -1
+  A Y -1
+  B Y -1
 !end_macro AND
 
 # Y = A OR B
@@ -39,13 +39,13 @@
 # Y = A XOR B
 !begin_macro XOR
   A    0.5
-  B    0.5
-  Y    0.5
-  $a1 -1
+  B   -0.5
+  Y   -0.5
+  $a1  1
 
-  A B    0.5
-  A Y    0.5
-  A $a1 -1
+  A B   -0.5
+  A Y   -0.5
+  A $a1  1
   B Y    0.5
   B $a1 -1
   Y $a1 -1
@@ -53,26 +53,22 @@
 
 # Y = S ? B : A
 !begin_macro MUX
-  A    0.65
-  B   -0.325
-  C    0.65
-  Y   -0.65
-  $a1 -0.625
-  $a2 -1
+  S    0.5
+  A    0.25
+  B   -0.25
+  Y    0.5
+  $a1  1
 
-  A   B   -0.325
-  A   C    0.325
-  A   Y   -0.65
-  A   $a1 -1
-  A   $a2 -0.3
-  B   $a1  1
-  B   $a2 -0.35
-  C   Y   -0.65
-  C   $a1  0.025
-  C   $a2 -1
-  Y   $a1  0.65
-  Y   $a2  0.65
-  $a1 $a2 -0.75
+  S A   0.25
+  S B   -0.25
+  S Y    0.5
+  S $a1  1
+  A B    0.5
+  A Y   -0.5
+  A $a1  0.5
+  B Y   -1
+  B $a1 -0.5
+  Y $a1  1
 !end_macro MUX
 
 # Constants for power and ground.
