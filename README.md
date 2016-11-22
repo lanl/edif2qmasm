@@ -4,20 +4,20 @@ edif2qmasm
 Description
 -----------
 
-`edif2qmasm` makes it possible to run [Verilog](https://en.wikipedia.org/wiki/Verilog) programs on a [D-Wave quantum annealer](http://www.dwavesys.com/).
+`edif2qmasm` makes it possible to run [Verilog](https://en.wikipedia.org/wiki/Verilog) or [VHDL](https://en.wikipedia.org/wiki/VHDL) programs on a [D-Wave quantum annealer](http://www.dwavesys.com/).
 
 *Why quantum annealing?*  The primary reason to target a quantum annealer—really, any hardware annealer—is that programs can be run in either the forward or backward direction.  One can in fact specify any combination of inputs and outputs and solve for the other, unspecified, values.  This benefits both
 
 * expressiveness, as some programs are easier to write in the _A_ → _B_ direction than in the _B_ → _A_ direction, and
 * performance, as some classical algorithms run quickly in the _A_ → _B_ direction but slowly in the _B_ → _A_ direction.  Consider verifying a solution to an [NP-complete](https://en.wikipedia.org/wiki/NP-completeness) problem (fast) versus producing a solution to an NP-complete problem (slow).
 
-*Why Verilog?*  Some of the advantages of using Verilog as a D-Wave programming language are that it
+*Why Verilog/VHDL?*  Some of the advantages of using a hardware-description language as a D-Wave programming language are that it
 
 * supports basic programming-language features such as conditionals, loops, multi-bit constants and variables, assignments, arithmetic operations, and modules,
 * provides precise control over bit widths, which reduces the number of wasted qubits (a precious resource in contemporary D-Wave systems),
 * enables exploiting the code optimizations and debugging support provided by synthesis tools.
 
-More precisely, `edif2qmasm` converts from the [EDIF](https://en.wikipedia.org/wiki/EDIF) netlist format, which can be output by various synthesis tools, to the [QMASM](https://github.com/losalamos/qmasm) quantum macro assembly language.  Technically, `edif2qmasm` is not limited to Verilog, but I haven't yet found an open-source compiler for VHDL or any other hardware description language that can produce EDIF netlists.
+More precisely, `edif2qmasm` converts from the [EDIF](https://en.wikipedia.org/wiki/EDIF) netlist format, which can be output by various synthesis tools, to the [QMASM](https://github.com/losalamos/qmasm) quantum macro assembly language. To date, `edif2qmasm` has been tested only with Verilog because there exist open-source compilers that convert Verilog to EDIF, and I don't know of an equivalent open-source tool that can convert VHDL to EDIF.
 
 Installation
 ------------
@@ -61,7 +61,7 @@ replacing `/usr/local` with whatever installation prefix you used.
 Limitations
 -----------
 
-Only combinational logic is supported by the current version of `edif2qmasm`.  The hope is to add support for sequential logic in a future version.
+Only combinational logic is supported by the current version of `edif2qmasm`.  I hope to add support for sequential logic in a future version.
 
 The resulting QMASM programs are not very robust in that the minimum-energy solutions do not consistently represent a correct execution when run on D-Wave hardware.  Suggestions on how to improve robustness are welcome.
 
