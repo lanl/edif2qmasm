@@ -10,6 +10,11 @@ import (
 	"path"
 )
 
+//go:generate bash -c "pigeon parse-edif.peg > parse-edif.tmp"
+//go:generate bash -c "goimports parse-edif.tmp | gofmt > parse-edif.go"
+//go:generate rm parse-edif.tmp
+//go:generate stringer -type=SExpType edif.go edif2qmasm.go parse-edif.go qmasm.go  walk-sexp.go
+
 var notify *log.Logger // Help notify the user of warnings and errors.
 
 type Empty struct{} // Zero-byte type for defining and manipulating sets
