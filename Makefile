@@ -16,26 +16,26 @@ SED = sed
 
 all: edif2qmasm stdcell.qmasm edif2qmasm.1
 
-SOURCES = \
+GEN_SOURCES = \
+	parse-edif.go \
+	sexptype_string.go
+
+REG_SOURCES = \
 	edif.go \
 	edif2qmasm.go \
-	parse-edif.go \
 	qmasm.go \
-	sexptype_string.go \
 	walk-sexp.go
 
-SOURCES_NO_SEXPTYPE = $(subst sexptype_string.go,,$(SOURCES))
+SOURCES = $(REG_SOURCES) $(GEN_SOURCES)
 
 edif2qmasm: $(SOURCES)
-	$(GO) build -o edif2qmasm $(SOURCES)
+	$(GO) build -o edif2qmasm
 
-parse-edif.go: parse-edif.peg
-	pigeon parse-edif.peg > parse-edif.tmp
-	goimports parse-edif.tmp | gofmt > parse-edif.go
-	$(RM) parse-edif.tmp
+parse-edif.go: parse-edif.peg $(REG_SOURCES)
+	$(GO) generate -x
 
-sexptype_string.go: $(SOURCES_NO_SEXPTYPE)
-	stringer -type=SExpType $(SOURCES_NO_SEXPTYPE)
+# The rule for parse-edif.go produces sexptype_string.go as a side effect.
+sexptype_string.go: parse-edif.go
 
 edif2qmasm.1: edif2qmasm.rst
 	$(SED) "s/:Date:.*/:Date: $$(date +'%Y-%m-%d')/" edif2qmasm.rst | \
@@ -43,10 +43,9 @@ edif2qmasm.1: edif2qmasm.rst
 
 clean:
 	$(RM) edif2qmasm
-	$(RM) parse-edif.tmp
 
 maintainer-clean:
-	$(RM) parse-edif.go sexptype_string.go edif2qmasm.1
+	$(RM) $(GEN_SOURCES) edif2qmasm.1 parse-edif.tmp
 
 install: edif2qmasm stdcell.qmasm edif2qmasm.1
 	$(INSTALL) -m 0755 -d $(DESTDIR)$(bindir)
