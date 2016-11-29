@@ -16,6 +16,8 @@ SED = sed
 
 all: edif2qmasm stdcell.qmasm edif2qmasm.1
 
+VERSION = 1.0
+
 GEN_SOURCES = \
 	parse-edif.go \
 	sexptype_string.go
@@ -27,6 +29,14 @@ REG_SOURCES = \
 	walk-sexp.go
 
 SOURCES = $(REG_SOURCES) $(GEN_SOURCES)
+
+TARCONTENTS = \
+	$(SOURCES) \
+	edif2qmasm.1 \
+	edif2qmasm.rst \
+	Makefile \
+	parse-edif.peg \
+	stdcell.qmasm
 
 edif2qmasm: $(SOURCES)
 	$(GO) build -o edif2qmasm
@@ -45,7 +55,8 @@ clean:
 	$(RM) edif2qmasm
 
 maintainer-clean:
-	$(RM) $(GEN_SOURCES) edif2qmasm.1 parse-edif.tmp
+	$(RM) $(GEN_SOURCES) parse-edif.tmp
+	$(RM) edif2qmasm.1 edif2qmasm-$(VERSION).tar.gz
 
 install: edif2qmasm stdcell.qmasm edif2qmasm.1
 	$(INSTALL) -m 0755 -d $(DESTDIR)$(bindir)
@@ -56,4 +67,13 @@ install: edif2qmasm stdcell.qmasm edif2qmasm.1
 	$(INSTALL) -m 0644 edif2qmasm.1 $(DESTDIR)$(mandir)
 	gzip $(DESTDIR)$(mandir)/edif2qmasm.1
 
-.PHONY: all clean maintainer-clean install
+dist: edif2qmasm-$(VERSION).tar.gz
+
+edif2qmasm-$(VERSION).tar.gz: $(TARCONTENTS)
+	$(RM) -r edif2qmasm-$(VERSION)
+	mkdir edif2qmasm-$(VERSION)
+	cp $(TARCONTENTS) edif2qmasm-$(VERSION)
+	tar -czvf edif2qmasm-$(VERSION).tar.gz edif2qmasm-$(VERSION)
+	$(RM) -r edif2qmasm-$(VERSION)
+
+.PHONY: all clean maintainer-clean install dist
