@@ -1,0 +1,20 @@
+###############################################################
+# Generic synthesis script derived from the Yosys README file #
+#							      #
+# Usage: yosys infile.v synth.ys -b edif -o outfile.edif      #
+###############################################################
+
+# Check design hierarchy.
+hierarchy
+
+# Translate processes.
+proc; opt
+
+# Detect and optimize FSM encodings.
+fsm; opt
+
+# Convert to gate logic.
+techmap; opt
+
+# Clean up.
+clean
