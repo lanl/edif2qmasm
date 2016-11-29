@@ -13,6 +13,7 @@ sharedir = $(prefix)/share/edif2qmasm
 GO = go
 INSTALL = install
 SED = sed
+RST2MAN = rst2man
 
 all: edif2qmasm stdcell.qmasm edif2qmasm.1
 
@@ -49,7 +50,7 @@ sexptype_string.go: parse-edif.go
 
 edif2qmasm.1: edif2qmasm.rst
 	$(SED) "s/:Date:.*/:Date: $$(date +'%Y-%m-%d')/" edif2qmasm.rst | \
-	  rst2man > edif2qmasm.1
+	  $(RST2MAN) > edif2qmasm.1
 
 clean:
 	$(RM) edif2qmasm
