@@ -1,5 +1,27 @@
-// edif2qubits is a program that converts an EDIF file into LANL's
-// QMASM format for execution on a quantum annealer.
+/*
+edif2qmasm is a program that converts an EDIF file into LANL's QMASM format
+for execution on a quantum annealer.
+
+What this means is that you can write a program in a hardware-description
+language such as Verilog or VHDL then run it on a D-Wave quantum processing
+unit (QPU).  The advantage of doing so is that the QPU does not distinguish
+between inputs and outputs.  That is, programs can just as easily be run
+"backward" (from outputs to inputs) as "forward" (from inputs to outputs)
+or even a combination of the two.
+
+For instance, a one-line program that assigns C = A*B can be given A and B
+and produce their product, C; it can be given C and A and produce their
+quotient, B; or it can be given the product C, and factor that into A and
+B.  All of those variations consume the same amount of time but with the
+caveat that a QPU is a stochastic device and is not guaranteed to produce
+the same—or even a correct—answer every time.
+
+Usage:
+
+    edif2qmasm myfile.edif > myfile.qmasm
+
+See https://github.com/losalamos/edif2qmasm for more information.
+*/
 package main
 
 import (
