@@ -74,7 +74,7 @@ Documentation
 In addition to this file, two other sources of documentation are
 
 * [the `edif2qmasm` manual page](https://github.com/losalamos/edif2qmasm/blob/master/edif2qmasm.rst) and
-* [the `README` file in the `examples` directory](https://github.com/losalamos/edif2qmasm/blob/master/examples/README.md).
+* [the `README.md` file in the `examples` directory](https://github.com/losalamos/edif2qmasm/blob/master/examples/README.md).
 
 Limitations
 -----------
