@@ -1,0 +1,43 @@
+#! /usr/bin/env perl
+
+############################################################
+# Postprocess QMASM's output when run on mult.edif to show #
+# multiplication problems in a more user-friendly manner   #
+#							   #
+# By Scott Pakin <pakin@lanl.gov>			   #
+############################################################
+
+use warnings;
+use strict;
+
+my ($soln, $energy, $tally, $a, $b, $c, $have_data) = (0) x 7;
+while (my $line = <>) {
+    chomp $line;
+    if ($line =~ /Solution \#(\d+) \(energy = (-?[\d.]+), tally = (\d+)\):/) {
+	# Reset the multiplication for each solution.
+	($soln, $energy, $tally) = ($1, $2, $3);
+	$a = $b = $c = $have_data = 0;
+	next;
+    }
+    if ($line =~ /multiplicand\[(\d+)\]\s*([-+]1)/) {
+	$a |= 1<<$1 if $2 eq "+1";
+	$have_data = 1;
+	next;
+    }
+    if ($line =~ /multiplier\[(\d+)\]\s*([-+]1)/) {
+	$b |= 1<<$1 if $2 eq "+1";
+	$have_data = 1;
+	next;
+    }
+    if ($line =~ /product\[(\d+)\]\s*([-+]1)/) {
+	$c |= 1<<$1 if $2 eq "+1";
+	$have_data = 1;
+	next;
+    }
+    if ($have_data) {
+	# End of a table -- output what we have.
+	printf "Claim \#%d: %2d * %2d = %2d [%s] -- %d @ %.2f\n", $soln, $a, $b, $c, ($a*$b == $c ? "YES" : "NO"), $tally, $energy;
+	$have_data = 0;
+	next;
+    }
+}

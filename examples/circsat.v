@@ -1,3 +1,9 @@
+// Compute y = f(a, b, c) for an arbitrary function f.  Forcing y to
+// TRUE and solving for a, b, and c is how one can solve the
+// corresponding circuit-satisfiability problem.
+//
+// Author: Scott Pakin <pakin@lanl.gov>
+
 module circsat (a, b, c, y);
    input a, b, c;
    output y;

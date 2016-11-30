@@ -35,6 +35,7 @@ TARCONTENTS = \
 	$(SOURCES) \
 	edif2qmasm.1 \
 	edif2qmasm.rst \
+	examples \
 	Makefile \
 	parse-edif.peg \
 	stdcell.qmasm
@@ -73,7 +74,8 @@ dist: edif2qmasm-$(VERSION).tar.gz
 edif2qmasm-$(VERSION).tar.gz: $(TARCONTENTS)
 	$(RM) -r edif2qmasm-$(VERSION)
 	mkdir edif2qmasm-$(VERSION)
-	cp $(TARCONTENTS) edif2qmasm-$(VERSION)
+	cp -r $(TARCONTENTS) edif2qmasm-$(VERSION)
+	cd edif2qmasm-$(VERSION)/examples && $(MAKE) clean
 	tar -czvf edif2qmasm-$(VERSION).tar.gz edif2qmasm-$(VERSION)
 	$(RM) -r edif2qmasm-$(VERSION)
 

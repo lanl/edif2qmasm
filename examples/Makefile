@@ -6,7 +6,8 @@
 ######################################
 
 VSOURCES = \
-	circsat.v
+	circsat.v \
+	mult.v
 
 EDIFS = $(patsubst %.v, %.edif, $(VSOURCES))
 YOSYS = yosys
