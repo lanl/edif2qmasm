@@ -68,6 +68,14 @@ export QMASMPATH=/usr/local/share/edif2qmasm:$QMASMPATH
 ```
 replacing `/usr/local` with whatever installation prefix you used.
 
+Documentation
+-------------
+
+In addition to this file, two other sources of documentation are
+
+* [the `edif2qmasm` manual page](https://github.com/losalamos/edif2qmasm/blob/master/edif2qmasm.rst) and
+* [the `README` file in the `examples` directory](https://github.com/losalamos/edif2qmasm/blob/master/examples/README.md).
+
 Limitations
 -----------
 
@@ -100,7 +108,7 @@ make install
 License
 -------
 
-`edif2qmasm` is provided under a BSD-ish license with a "modifications must be indicated" clause.  See [the LICENSE file](http://github.com/losalamos/edif2qmasm/blob/master/LICENSE.md) for the full text.
+`edif2qmasm` is provided under a BSD-ish license with a "modifications must be indicated" clause.  See [the LICENSE file](https://github.com/losalamos/edif2qmasm/blob/master/LICENSE.md) for the full text.
 
 `edif2qmasm` is part of the Hybrid Quantum-Classical Computing suite, known internally as LA-CC-16-032.
 
