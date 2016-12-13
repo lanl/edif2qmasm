@@ -58,22 +58,22 @@ Excluding the comments, module definition, and parameter declarations, [`mult.v`
 assign product = multiplicand * multiplier;
 ```
 
-At the time of this writing, `mult.v` commonly produced incorrect solutions at the minimal-energy readings.  A debugging effort (with QMASM being the likely culprit) is underway.  Nevertheless, `mult.v` showcases the flexibility of `edif2qmasm`'s approach.  For starters, one can pin values to the inputs, say 3 and 5 (binary 011 and 101) to multiply them together:
+`mult.v` showcases the flexibility of `edif2qmasm`'s approach.  For starters, one can pin values to the inputs, say 3 and 5 (binary 011 and 101) to multiply them together:
 ```bash
 $ edif2qmasm mult.edif | qmasm --run --pin="mult.multiplicand[2:0] := 011" --pin="mult.multiplier[2:0] := 101"
-# mult.multiplicand[0] --> 233 239
-# mult.multiplicand[1] --> 163 166
-# mult.multiplicand[2] --> 388
-# mult.multiplier[0] --> 192
-# mult.multiplier[1] --> 716
-# mult.multiplier[2] --> 158
-# mult.product[0] --> 129
-# mult.product[1] --> 839
-# mult.product[2] --> 362
-# mult.product[3] --> 25
-# mult.product[4] --> 434
-# mult.product[5] --> 404
-Solution #1 (energy = -446.25, tally = 1):
+# mult.multiplicand[0] --> 810 815 823 831 906
+# mult.multiplicand[1] --> 1016
+# mult.multiplicand[2] --> 708
+# mult.multiplier[0] --> 329 335
+# mult.multiplier[1] --> 268
+# mult.multiplier[2] --> 690
+# mult.product[0] --> 445
+# mult.product[1] --> 614
+# mult.product[2] --> 716
+# mult.product[3] --> 627
+# mult.product[4] --> 461
+# mult.product[5] --> 1108
+Solution #1 (energy = -497.75, tally = 489):
 
     Name(s)                  Spin  Boolean
     -----------------------  ----  --------
@@ -86,7 +86,7 @@ Solution #1 (energy = -446.25, tally = 1):
     mult.product[0]            +1  True
     mult.product[1]            +1  True
     mult.product[2]            +1  True
-    mult.product[3]            -1  False
+    mult.product[3]            +1  True
     mult.product[4]            -1  False
     mult.product[5]            -1  False
 ```
@@ -94,58 +94,57 @@ Solution #1 (energy = -446.25, tally = 1):
 The `friendly-mult` script post-processes the above into a more human-readable form:
 ```bash
 $ edif2qmasm mult.edif | qmasm --run --pin="mult.multiplicand[2:0] := 011" --pin="mult.multiplier[2:0] := 101" | ./friendly-mult
-# mult.multiplicand[0] --> 998
-# mult.multiplicand[1] --> 514 516
-# mult.multiplicand[2] --> 788
-# mult.multiplier[0] --> 904 908
-# mult.multiplier[1] --> 808 812
-# mult.multiplier[2] --> 595
-# mult.product[0] --> 1000
-# mult.product[1] --> 1025
-# mult.product[2] --> 782
-# mult.product[3] --> 422
-# mult.product[4] --> 177
-# mult.product[5] --> 367
-Claim #1:  3 *  5 = 15 [YES] -- 3 @ -389.75
+# mult.multiplicand[0] --> 300
+# mult.multiplicand[1] --> 412 420
+# mult.multiplicand[2] --> 887
+# mult.multiplier[0] --> 213 221
+# mult.multiplier[1] --> 970 975
+# mult.multiplier[2] --> 118
+# mult.product[0] --> 198
+# mult.product[1] --> 778
+# mult.product[2] --> 246
+# mult.product[3] --> 804
+# mult.product[4] --> 624
+# mult.product[5] --> 838
+Claim #1:  3 *  5 = 15 [YES] -- 450 @ -444.75
 ```
 In the above, `[YES]` implies that the multiplication is correct, not that it is necessarily the inputs/outputs the user requested.
 
 One can pin the output and one of the inputs to perform integer division, say 15 ÷ 3 (binary 001111 ÷ 011):
 ```bash
-$ edif2qmasm mult.edif | qmasm --run --all-solns --pin="mult.multiplicand[2:0] := 011" --pin="mult.product[5:0] := 001111" | ./friendly-mult | grep YES
-# mult.multiplicand[0] --> 514 519
-# mult.multiplicand[1] --> 538 541
-# mult.multiplicand[2] --> 627 631
-# mult.multiplier[0] --> 521 526
-# mult.multiplier[1] --> 880 884
-# mult.multiplier[2] --> 298 394
-# mult.product[0] --> 705
-# mult.product[1] --> 131
-# mult.product[2] --> 314
-# mult.product[3] --> 165
-# mult.product[4] --> 214
-# mult.product[5] --> 489
-Claim #4:  3 *  5 = 15 [YES] -- 1 @ -435.25
+$ edif2qmasm mult.edif | qmasm --run --pin="mult.multiplicand[2:0] := 011" --pin="mult.product[5:0] := 001111" | ./friendly-mult
+# mult.multiplicand[0] --> 251 347 351
+# mult.multiplicand[1] --> 852 859 860
+# mult.multiplicand[2] --> 748
+# mult.multiplier[0] --> 368
+# mult.multiplier[1] --> 729 734
+# mult.multiplier[2] --> 639
+# mult.product[0] --> 332
+# mult.product[1] --> 874
+# mult.product[2] --> 426
+# mult.product[3] --> 499
+# mult.product[4] --> 454 457 462
+# mult.product[5] --> 933
+Claim #1:  3 *  5 = 15 [YES] -- 103 @ -474.75
 ```
-Note that we specified the `--all-solns` option to `qmasm` as a workaround until we determine why the minimal-energy solutions are so often incorrect.
 
 Finally, one can pin only the output to factor a number, say 15 (binary 001111):
 ```bash
-$ edif2qmasm mult.edif | qmasm --run --all-solns --pin="mult.product[5:0] := 001111" | ./friendly-mult | grep YES
-# mult.multiplicand[0] --> 73
-# mult.multiplicand[1] --> 298 300
-# mult.multiplicand[2] --> 209 213
-# mult.multiplier[0] --> 137 140
-# mult.multiplier[1] --> 179 182
-# mult.multiplier[2] --> 507
-# mult.product[0] --> 37
-# mult.product[1] --> 220
-# mult.product[2] --> 720 816
-# mult.product[3] --> 169 172
-# mult.product[4] --> 493
-# mult.product[5] --> 363
-Claim #21:  3 *  5 = 15 [YES] -- 1 @ -457.75
-Claim #39:  5 *  3 = 15 [YES] -- 1 @ -458.75
+$ edif2qmasm mult.edif | qmasm --run --pin="mult.product[5:0] := 001111" | ./friendly-mult
+# mult.multiplicand[0] --> 545 550
+# mult.multiplicand[1] --> 240
+# mult.multiplicand[2] --> 946 950
+# mult.multiplier[0] --> 723 726
+# mult.multiplier[1] --> 357 365 373
+# mult.multiplier[2] --> 648 655
+# mult.product[0] --> 335
+# mult.product[1] --> 421
+# mult.product[2] --> 982
+# mult.product[3] --> 210
+# mult.product[4] --> 819
+# mult.product[5] --> 1024
+Claim #1:  3 *  5 = 15 [YES] -- 42 @ -460.75
+Claim #2:  5 *  3 = 15 [YES] -- 53 @ -460.75
 ```
 
 Map coloring
@@ -173,465 +172,465 @@ Solution #1 (energy = -462.25, tally = 1):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       -1  False  
-    map_color.EC[1]       +1  True   
-    map_color.GC[0]       +1  True   
-    map_color.GC[1]       +1  True   
-    map_color.MC[0]       +1  True   
-    map_color.MC[1]       -1  False  
-    map_color.QC[0]       -1  False  
-    map_color.QC[1]       -1  False  
-    map_color.WC[0]       +1  True   
-    map_color.WC[1]       -1  False  
-    map_color.valid       +1  True    
+    map_color.EC[0]       -1  False
+    map_color.EC[1]       +1  True
+    map_color.GC[0]       +1  True
+    map_color.GC[1]       +1  True
+    map_color.MC[0]       +1  True
+    map_color.MC[1]       -1  False
+    map_color.QC[0]       -1  False
+    map_color.QC[1]       -1  False
+    map_color.WC[0]       +1  True
+    map_color.WC[1]       -1  False
+    map_color.valid       +1  True
 
 Solution #2 (energy = -462.25, tally = 3):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       -1  False  
-    map_color.EC[1]       +1  True   
-    map_color.GC[0]       -1  False  
-    map_color.GC[1]       -1  False  
-    map_color.MC[0]       +1  True   
-    map_color.MC[1]       +1  True   
-    map_color.QC[0]       -1  False  
-    map_color.QC[1]       -1  False  
-    map_color.WC[0]       +1  True   
-    map_color.WC[1]       -1  False  
-    map_color.valid       +1  True    
+    map_color.EC[0]       -1  False
+    map_color.EC[1]       +1  True
+    map_color.GC[0]       -1  False
+    map_color.GC[1]       -1  False
+    map_color.MC[0]       +1  True
+    map_color.MC[1]       +1  True
+    map_color.QC[0]       -1  False
+    map_color.QC[1]       -1  False
+    map_color.WC[0]       +1  True
+    map_color.WC[1]       -1  False
+    map_color.valid       +1  True
 
 Solution #3 (energy = -462.25, tally = 4):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       +1  True   
-    map_color.EC[1]       +1  True   
-    map_color.GC[0]       -1  False  
-    map_color.GC[1]       -1  False  
-    map_color.MC[0]       +1  True   
-    map_color.MC[1]       -1  False  
-    map_color.QC[0]       -1  False  
-    map_color.QC[1]       -1  False  
-    map_color.WC[0]       +1  True   
-    map_color.WC[1]       -1  False  
-    map_color.valid       +1  True    
+    map_color.EC[0]       +1  True
+    map_color.EC[1]       +1  True
+    map_color.GC[0]       -1  False
+    map_color.GC[1]       -1  False
+    map_color.MC[0]       +1  True
+    map_color.MC[1]       -1  False
+    map_color.QC[0]       -1  False
+    map_color.QC[1]       -1  False
+    map_color.WC[0]       +1  True
+    map_color.WC[1]       -1  False
+    map_color.valid       +1  True
 
 Solution #4 (energy = -462.25, tally = 4):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       +1  True   
-    map_color.EC[1]       +1  True   
-    map_color.GC[0]       -1  False  
-    map_color.GC[1]       +1  True   
-    map_color.MC[0]       +1  True   
-    map_color.MC[1]       -1  False  
-    map_color.QC[0]       -1  False  
-    map_color.QC[1]       -1  False  
-    map_color.WC[0]       +1  True   
-    map_color.WC[1]       -1  False  
-    map_color.valid       +1  True    
+    map_color.EC[0]       +1  True
+    map_color.EC[1]       +1  True
+    map_color.GC[0]       -1  False
+    map_color.GC[1]       +1  True
+    map_color.MC[0]       +1  True
+    map_color.MC[1]       -1  False
+    map_color.QC[0]       -1  False
+    map_color.QC[1]       -1  False
+    map_color.WC[0]       +1  True
+    map_color.WC[1]       -1  False
+    map_color.valid       +1  True
 
 Solution #5 (energy = -462.25, tally = 2):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       +1  True   
-    map_color.EC[1]       +1  True   
-    map_color.GC[0]       -1  False  
-    map_color.GC[1]       -1  False  
-    map_color.MC[0]       -1  False  
-    map_color.MC[1]       +1  True   
-    map_color.QC[0]       -1  False  
-    map_color.QC[1]       -1  False  
-    map_color.WC[0]       +1  True   
-    map_color.WC[1]       -1  False  
-    map_color.valid       +1  True    
+    map_color.EC[0]       +1  True
+    map_color.EC[1]       +1  True
+    map_color.GC[0]       -1  False
+    map_color.GC[1]       -1  False
+    map_color.MC[0]       -1  False
+    map_color.MC[1]       +1  True
+    map_color.QC[0]       -1  False
+    map_color.QC[1]       -1  False
+    map_color.WC[0]       +1  True
+    map_color.WC[1]       -1  False
+    map_color.valid       +1  True
 
 Solution #6 (energy = -462.25, tally = 2):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       +1  True   
-    map_color.EC[1]       -1  False  
-    map_color.GC[0]       -1  False  
-    map_color.GC[1]       -1  False  
-    map_color.MC[0]       -1  False  
-    map_color.MC[1]       +1  True   
-    map_color.QC[0]       -1  False  
-    map_color.QC[1]       -1  False  
-    map_color.WC[0]       -1  False  
-    map_color.WC[1]       +1  True   
-    map_color.valid       +1  True    
+    map_color.EC[0]       +1  True
+    map_color.EC[1]       -1  False
+    map_color.GC[0]       -1  False
+    map_color.GC[1]       -1  False
+    map_color.MC[0]       -1  False
+    map_color.MC[1]       +1  True
+    map_color.QC[0]       -1  False
+    map_color.QC[1]       -1  False
+    map_color.WC[0]       -1  False
+    map_color.WC[1]       +1  True
+    map_color.valid       +1  True
 
 Solution #7 (energy = -462.25, tally = 6):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       +1  True   
-    map_color.EC[1]       -1  False  
-    map_color.GC[0]       +1  True   
-    map_color.GC[1]       +1  True   
-    map_color.MC[0]       -1  False  
-    map_color.MC[1]       +1  True   
-    map_color.QC[0]       -1  False  
-    map_color.QC[1]       -1  False  
-    map_color.WC[0]       -1  False  
-    map_color.WC[1]       +1  True   
-    map_color.valid       +1  True    
+    map_color.EC[0]       +1  True
+    map_color.EC[1]       -1  False
+    map_color.GC[0]       +1  True
+    map_color.GC[1]       +1  True
+    map_color.MC[0]       -1  False
+    map_color.MC[1]       +1  True
+    map_color.QC[0]       -1  False
+    map_color.QC[1]       -1  False
+    map_color.WC[0]       -1  False
+    map_color.WC[1]       +1  True
+    map_color.valid       +1  True
 
 Solution #8 (energy = -462.25, tally = 1):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       +1  True   
-    map_color.EC[1]       -1  False  
-    map_color.GC[0]       -1  False  
-    map_color.GC[1]       -1  False  
-    map_color.MC[0]       +1  True   
-    map_color.MC[1]       +1  True   
-    map_color.QC[0]       -1  False  
-    map_color.QC[1]       -1  False  
-    map_color.WC[0]       -1  False  
-    map_color.WC[1]       +1  True   
-    map_color.valid       +1  True    
+    map_color.EC[0]       +1  True
+    map_color.EC[1]       -1  False
+    map_color.GC[0]       -1  False
+    map_color.GC[1]       -1  False
+    map_color.MC[0]       +1  True
+    map_color.MC[1]       +1  True
+    map_color.QC[0]       -1  False
+    map_color.QC[1]       -1  False
+    map_color.WC[0]       -1  False
+    map_color.WC[1]       +1  True
+    map_color.valid       +1  True
 
 Solution #9 (energy = -462.25, tally = 2):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       +1  True   
-    map_color.EC[1]       +1  True   
-    map_color.GC[0]       -1  False  
-    map_color.GC[1]       -1  False  
-    map_color.MC[0]       +1  True   
-    map_color.MC[1]       -1  False  
-    map_color.QC[0]       -1  False  
-    map_color.QC[1]       -1  False  
-    map_color.WC[0]       -1  False  
-    map_color.WC[1]       +1  True   
-    map_color.valid       +1  True    
+    map_color.EC[0]       +1  True
+    map_color.EC[1]       +1  True
+    map_color.GC[0]       -1  False
+    map_color.GC[1]       -1  False
+    map_color.MC[0]       +1  True
+    map_color.MC[1]       -1  False
+    map_color.QC[0]       -1  False
+    map_color.QC[1]       -1  False
+    map_color.WC[0]       -1  False
+    map_color.WC[1]       +1  True
+    map_color.valid       +1  True
 
 Solution #10 (energy = -462.25, tally = 2):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       +1  True   
-    map_color.EC[1]       +1  True   
-    map_color.GC[0]       -1  False  
-    map_color.GC[1]       -1  False  
-    map_color.MC[0]       -1  False  
-    map_color.MC[1]       +1  True   
-    map_color.QC[0]       -1  False  
-    map_color.QC[1]       -1  False  
-    map_color.WC[0]       -1  False  
-    map_color.WC[1]       +1  True   
-    map_color.valid       +1  True    
+    map_color.EC[0]       +1  True
+    map_color.EC[1]       +1  True
+    map_color.GC[0]       -1  False
+    map_color.GC[1]       -1  False
+    map_color.MC[0]       -1  False
+    map_color.MC[1]       +1  True
+    map_color.QC[0]       -1  False
+    map_color.QC[1]       -1  False
+    map_color.WC[0]       -1  False
+    map_color.WC[1]       +1  True
+    map_color.valid       +1  True
 
 Solution #11 (energy = -462.25, tally = 7):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       +1  True   
-    map_color.EC[1]       -1  False  
-    map_color.GC[0]       -1  False  
-    map_color.GC[1]       -1  False  
-    map_color.MC[0]       -1  False  
-    map_color.MC[1]       +1  True   
-    map_color.QC[0]       -1  False  
-    map_color.QC[1]       -1  False  
-    map_color.WC[0]       +1  True   
-    map_color.WC[1]       +1  True   
-    map_color.valid       +1  True    
+    map_color.EC[0]       +1  True
+    map_color.EC[1]       -1  False
+    map_color.GC[0]       -1  False
+    map_color.GC[1]       -1  False
+    map_color.MC[0]       -1  False
+    map_color.MC[1]       +1  True
+    map_color.QC[0]       -1  False
+    map_color.QC[1]       -1  False
+    map_color.WC[0]       +1  True
+    map_color.WC[1]       +1  True
+    map_color.valid       +1  True
 
 Solution #12 (energy = -462.25, tally = 1):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       +1  True   
-    map_color.EC[1]       -1  False  
-    map_color.GC[0]       -1  False  
-    map_color.GC[1]       -1  False  
-    map_color.MC[0]       +1  True   
-    map_color.MC[1]       +1  True   
-    map_color.QC[0]       -1  False  
-    map_color.QC[1]       -1  False  
-    map_color.WC[0]       +1  True   
-    map_color.WC[1]       +1  True   
-    map_color.valid       +1  True    
+    map_color.EC[0]       +1  True
+    map_color.EC[1]       -1  False
+    map_color.GC[0]       -1  False
+    map_color.GC[1]       -1  False
+    map_color.MC[0]       +1  True
+    map_color.MC[1]       +1  True
+    map_color.QC[0]       -1  False
+    map_color.QC[1]       -1  False
+    map_color.WC[0]       +1  True
+    map_color.WC[1]       +1  True
+    map_color.valid       +1  True
 
 Solution #13 (energy = -462.25, tally = 5):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       +1  True   
-    map_color.EC[1]       -1  False  
-    map_color.GC[0]       -1  False  
-    map_color.GC[1]       +1  True   
-    map_color.MC[0]       +1  True   
-    map_color.MC[1]       +1  True   
-    map_color.QC[0]       -1  False  
-    map_color.QC[1]       -1  False  
-    map_color.WC[0]       +1  True   
-    map_color.WC[1]       +1  True   
-    map_color.valid       +1  True    
+    map_color.EC[0]       +1  True
+    map_color.EC[1]       -1  False
+    map_color.GC[0]       -1  False
+    map_color.GC[1]       +1  True
+    map_color.MC[0]       +1  True
+    map_color.MC[1]       +1  True
+    map_color.QC[0]       -1  False
+    map_color.QC[1]       -1  False
+    map_color.WC[0]       +1  True
+    map_color.WC[1]       +1  True
+    map_color.valid       +1  True
 
 Solution #14 (energy = -462.25, tally = 1):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       +1  True   
-    map_color.EC[1]       -1  False  
-    map_color.GC[0]       -1  False  
-    map_color.GC[1]       +1  True   
-    map_color.MC[0]       -1  False  
-    map_color.MC[1]       -1  False  
-    map_color.QC[0]       -1  False  
-    map_color.QC[1]       +1  True   
-    map_color.WC[0]       -1  False  
-    map_color.WC[1]       -1  False  
-    map_color.valid       +1  True    
+    map_color.EC[0]       +1  True
+    map_color.EC[1]       -1  False
+    map_color.GC[0]       -1  False
+    map_color.GC[1]       +1  True
+    map_color.MC[0]       -1  False
+    map_color.MC[1]       -1  False
+    map_color.QC[0]       -1  False
+    map_color.QC[1]       +1  True
+    map_color.WC[0]       -1  False
+    map_color.WC[1]       -1  False
+    map_color.valid       +1  True
 
 Solution #15 (energy = -462.25, tally = 1):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       +1  True   
-    map_color.EC[1]       -1  False  
-    map_color.GC[0]       +1  True   
-    map_color.GC[1]       +1  True   
-    map_color.MC[0]       -1  False  
-    map_color.MC[1]       -1  False  
-    map_color.QC[0]       -1  False  
-    map_color.QC[1]       +1  True   
-    map_color.WC[0]       -1  False  
-    map_color.WC[1]       -1  False  
-    map_color.valid       +1  True    
+    map_color.EC[0]       +1  True
+    map_color.EC[1]       -1  False
+    map_color.GC[0]       +1  True
+    map_color.GC[1]       +1  True
+    map_color.MC[0]       -1  False
+    map_color.MC[1]       -1  False
+    map_color.QC[0]       -1  False
+    map_color.QC[1]       +1  True
+    map_color.WC[0]       -1  False
+    map_color.WC[1]       -1  False
+    map_color.valid       +1  True
 
 Solution #16 (energy = -462.25, tally = 1):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       +1  True   
-    map_color.EC[1]       +1  True   
-    map_color.GC[0]       -1  False  
-    map_color.GC[1]       +1  True   
-    map_color.MC[0]       -1  False  
-    map_color.MC[1]       -1  False  
-    map_color.QC[0]       -1  False  
-    map_color.QC[1]       +1  True   
-    map_color.WC[0]       -1  False  
-    map_color.WC[1]       -1  False  
-    map_color.valid       +1  True    
+    map_color.EC[0]       +1  True
+    map_color.EC[1]       +1  True
+    map_color.GC[0]       -1  False
+    map_color.GC[1]       +1  True
+    map_color.MC[0]       -1  False
+    map_color.MC[1]       -1  False
+    map_color.QC[0]       -1  False
+    map_color.QC[1]       +1  True
+    map_color.WC[0]       -1  False
+    map_color.WC[1]       -1  False
+    map_color.valid       +1  True
 
 Solution #17 (energy = -462.25, tally = 4):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       +1  True   
-    map_color.EC[1]       +1  True   
-    map_color.GC[0]       +1  True   
-    map_color.GC[1]       -1  False  
-    map_color.MC[0]       -1  False  
-    map_color.MC[1]       -1  False  
-    map_color.QC[0]       -1  False  
-    map_color.QC[1]       +1  True   
-    map_color.WC[0]       -1  False  
-    map_color.WC[1]       -1  False  
-    map_color.valid       +1  True    
+    map_color.EC[0]       +1  True
+    map_color.EC[1]       +1  True
+    map_color.GC[0]       +1  True
+    map_color.GC[1]       -1  False
+    map_color.MC[0]       -1  False
+    map_color.MC[1]       -1  False
+    map_color.QC[0]       -1  False
+    map_color.QC[1]       +1  True
+    map_color.WC[0]       -1  False
+    map_color.WC[1]       -1  False
+    map_color.valid       +1  True
 
 Solution #18 (energy = -462.25, tally = 1):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       +1  True   
-    map_color.EC[1]       +1  True   
-    map_color.GC[0]       -1  False  
-    map_color.GC[1]       +1  True   
-    map_color.MC[0]       +1  True   
-    map_color.MC[1]       -1  False  
-    map_color.QC[0]       -1  False  
-    map_color.QC[1]       +1  True   
-    map_color.WC[0]       -1  False  
-    map_color.WC[1]       -1  False  
-    map_color.valid       +1  True    
+    map_color.EC[0]       +1  True
+    map_color.EC[1]       +1  True
+    map_color.GC[0]       -1  False
+    map_color.GC[1]       +1  True
+    map_color.MC[0]       +1  True
+    map_color.MC[1]       -1  False
+    map_color.QC[0]       -1  False
+    map_color.QC[1]       +1  True
+    map_color.WC[0]       -1  False
+    map_color.WC[1]       -1  False
+    map_color.valid       +1  True
 
 Solution #19 (energy = -462.25, tally = 1):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       -1  False  
-    map_color.EC[1]       -1  False  
-    map_color.GC[0]       -1  False  
-    map_color.GC[1]       +1  True   
-    map_color.MC[0]       +1  True   
-    map_color.MC[1]       -1  False  
-    map_color.QC[0]       -1  False  
-    map_color.QC[1]       +1  True   
-    map_color.WC[0]       +1  True   
-    map_color.WC[1]       -1  False  
-    map_color.valid       +1  True    
+    map_color.EC[0]       -1  False
+    map_color.EC[1]       -1  False
+    map_color.GC[0]       -1  False
+    map_color.GC[1]       +1  True
+    map_color.MC[0]       +1  True
+    map_color.MC[1]       -1  False
+    map_color.QC[0]       -1  False
+    map_color.QC[1]       +1  True
+    map_color.WC[0]       +1  True
+    map_color.WC[1]       -1  False
+    map_color.valid       +1  True
 
 Solution #20 (energy = -462.25, tally = 2):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       +1  True   
-    map_color.EC[1]       +1  True   
-    map_color.GC[0]       -1  False  
-    map_color.GC[1]       +1  True   
-    map_color.MC[0]       -1  False  
-    map_color.MC[1]       -1  False  
-    map_color.QC[0]       -1  False  
-    map_color.QC[1]       +1  True   
-    map_color.WC[0]       +1  True   
-    map_color.WC[1]       -1  False  
-    map_color.valid       +1  True    
+    map_color.EC[0]       +1  True
+    map_color.EC[1]       +1  True
+    map_color.GC[0]       -1  False
+    map_color.GC[1]       +1  True
+    map_color.MC[0]       -1  False
+    map_color.MC[1]       -1  False
+    map_color.QC[0]       -1  False
+    map_color.QC[1]       +1  True
+    map_color.WC[0]       +1  True
+    map_color.WC[1]       -1  False
+    map_color.valid       +1  True
 
 Solution #21 (energy = -462.25, tally = 2):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       +1  True   
-    map_color.EC[1]       +1  True   
-    map_color.GC[0]       -1  False  
-    map_color.GC[1]       -1  False  
-    map_color.MC[0]       +1  True   
-    map_color.MC[1]       -1  False  
-    map_color.QC[0]       -1  False  
-    map_color.QC[1]       +1  True   
-    map_color.WC[0]       +1  True   
-    map_color.WC[1]       -1  False  
-    map_color.valid       +1  True    
+    map_color.EC[0]       +1  True
+    map_color.EC[1]       +1  True
+    map_color.GC[0]       -1  False
+    map_color.GC[1]       -1  False
+    map_color.MC[0]       +1  True
+    map_color.MC[1]       -1  False
+    map_color.QC[0]       -1  False
+    map_color.QC[1]       +1  True
+    map_color.WC[0]       +1  True
+    map_color.WC[1]       -1  False
+    map_color.valid       +1  True
 
 Solution #22 (energy = -462.25, tally = 2):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       -1  False  
-    map_color.EC[1]       -1  False  
-    map_color.GC[0]       -1  False  
-    map_color.GC[1]       +1  True   
-    map_color.MC[0]       +1  True   
-    map_color.MC[1]       -1  False  
-    map_color.QC[0]       -1  False  
-    map_color.QC[1]       +1  True   
-    map_color.WC[0]       +1  True   
-    map_color.WC[1]       +1  True   
-    map_color.valid       +1  True    
+    map_color.EC[0]       -1  False
+    map_color.EC[1]       -1  False
+    map_color.GC[0]       -1  False
+    map_color.GC[1]       +1  True
+    map_color.MC[0]       +1  True
+    map_color.MC[1]       -1  False
+    map_color.QC[0]       -1  False
+    map_color.QC[1]       +1  True
+    map_color.WC[0]       +1  True
+    map_color.WC[1]       +1  True
+    map_color.valid       +1  True
 
 Solution #23 (energy = -462.25, tally = 2):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       -1  False  
-    map_color.EC[1]       -1  False  
-    map_color.GC[0]       -1  False  
-    map_color.GC[1]       +1  True   
-    map_color.MC[0]       +1  True   
-    map_color.MC[1]       +1  True   
-    map_color.QC[0]       -1  False  
-    map_color.QC[1]       +1  True   
-    map_color.WC[0]       +1  True   
-    map_color.WC[1]       +1  True   
-    map_color.valid       +1  True    
+    map_color.EC[0]       -1  False
+    map_color.EC[1]       -1  False
+    map_color.GC[0]       -1  False
+    map_color.GC[1]       +1  True
+    map_color.MC[0]       +1  True
+    map_color.MC[1]       +1  True
+    map_color.QC[0]       -1  False
+    map_color.QC[1]       +1  True
+    map_color.WC[0]       +1  True
+    map_color.WC[1]       +1  True
+    map_color.valid       +1  True
 
 Solution #24 (energy = -462.25, tally = 1):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       -1  False  
-    map_color.EC[1]       -1  False  
-    map_color.GC[0]       +1  True   
-    map_color.GC[1]       -1  False  
-    map_color.MC[0]       +1  True   
-    map_color.MC[1]       +1  True   
-    map_color.QC[0]       -1  False  
-    map_color.QC[1]       +1  True   
-    map_color.WC[0]       +1  True   
-    map_color.WC[1]       +1  True   
-    map_color.valid       +1  True    
+    map_color.EC[0]       -1  False
+    map_color.EC[1]       -1  False
+    map_color.GC[0]       +1  True
+    map_color.GC[1]       -1  False
+    map_color.MC[0]       +1  True
+    map_color.MC[1]       +1  True
+    map_color.QC[0]       -1  False
+    map_color.QC[1]       +1  True
+    map_color.WC[0]       +1  True
+    map_color.WC[1]       +1  True
+    map_color.valid       +1  True
 
 Solution #25 (energy = -462.25, tally = 3):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       +1  True   
-    map_color.EC[1]       -1  False  
-    map_color.GC[0]       -1  False  
-    map_color.GC[1]       -1  False  
-    map_color.MC[0]       +1  True   
-    map_color.MC[1]       +1  True   
-    map_color.QC[0]       -1  False  
-    map_color.QC[1]       +1  True   
-    map_color.WC[0]       +1  True   
-    map_color.WC[1]       +1  True   
-    map_color.valid       +1  True    
+    map_color.EC[0]       +1  True
+    map_color.EC[1]       -1  False
+    map_color.GC[0]       -1  False
+    map_color.GC[1]       -1  False
+    map_color.MC[0]       +1  True
+    map_color.MC[1]       +1  True
+    map_color.QC[0]       -1  False
+    map_color.QC[1]       +1  True
+    map_color.WC[0]       +1  True
+    map_color.WC[1]       +1  True
+    map_color.valid       +1  True
 
 Solution #26 (energy = -462.25, tally = 1):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       +1  True   
-    map_color.EC[1]       +1  True   
-    map_color.GC[0]       +1  True   
-    map_color.GC[1]       -1  False  
-    map_color.MC[0]       -1  False  
-    map_color.MC[1]       +1  True   
-    map_color.QC[0]       +1  True   
-    map_color.QC[1]       -1  False  
-    map_color.WC[0]       -1  False  
-    map_color.WC[1]       +1  True   
-    map_color.valid       +1  True    
+    map_color.EC[0]       +1  True
+    map_color.EC[1]       +1  True
+    map_color.GC[0]       +1  True
+    map_color.GC[1]       -1  False
+    map_color.MC[0]       -1  False
+    map_color.MC[1]       +1  True
+    map_color.QC[0]       +1  True
+    map_color.QC[1]       -1  False
+    map_color.WC[0]       -1  False
+    map_color.WC[1]       +1  True
+    map_color.valid       +1  True
 
 Solution #27 (energy = -462.25, tally = 1):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       -1  False  
-    map_color.EC[1]       -1  False  
-    map_color.GC[0]       +1  True   
-    map_color.GC[1]       -1  False  
-    map_color.MC[0]       -1  False  
-    map_color.MC[1]       +1  True   
-    map_color.QC[0]       +1  True   
-    map_color.QC[1]       -1  False  
-    map_color.WC[0]       +1  True   
-    map_color.WC[1]       +1  True   
-    map_color.valid       +1  True    
+    map_color.EC[0]       -1  False
+    map_color.EC[1]       -1  False
+    map_color.GC[0]       +1  True
+    map_color.GC[1]       -1  False
+    map_color.MC[0]       -1  False
+    map_color.MC[1]       +1  True
+    map_color.QC[0]       +1  True
+    map_color.QC[1]       -1  False
+    map_color.WC[0]       +1  True
+    map_color.WC[1]       +1  True
+    map_color.valid       +1  True
 
 Solution #28 (energy = -462.25, tally = 1):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       -1  False  
-    map_color.EC[1]       -1  False  
-    map_color.GC[0]       -1  False  
-    map_color.GC[1]       +1  True   
-    map_color.MC[0]       +1  True   
-    map_color.MC[1]       +1  True   
-    map_color.QC[0]       +1  True   
-    map_color.QC[1]       -1  False  
-    map_color.WC[0]       +1  True   
-    map_color.WC[1]       +1  True   
-    map_color.valid       +1  True    
+    map_color.EC[0]       -1  False
+    map_color.EC[1]       -1  False
+    map_color.GC[0]       -1  False
+    map_color.GC[1]       +1  True
+    map_color.MC[0]       +1  True
+    map_color.MC[1]       +1  True
+    map_color.QC[0]       +1  True
+    map_color.QC[1]       -1  False
+    map_color.WC[0]       +1  True
+    map_color.WC[1]       +1  True
+    map_color.valid       +1  True
 
 Solution #29 (energy = -462.25, tally = 1):
 
     Name(s)             Spin  Boolean
     ------------------  ----  --------
-    map_color.EC[0]       -1  False  
-    map_color.EC[1]       -1  False  
-    map_color.GC[0]       +1  True   
-    map_color.GC[1]       -1  False  
-    map_color.MC[0]       -1  False  
-    map_color.MC[1]       +1  True   
-    map_color.QC[0]       +1  True   
-    map_color.QC[1]       +1  True   
-    map_color.WC[0]       -1  False  
-    map_color.WC[1]       +1  True   
-    map_color.valid       +1  True    
+    map_color.EC[0]       -1  False
+    map_color.EC[1]       -1  False
+    map_color.GC[0]       +1  True
+    map_color.GC[1]       -1  False
+    map_color.MC[0]       -1  False
+    map_color.MC[1]       +1  True
+    map_color.QC[0]       +1  True
+    map_color.QC[1]       +1  True
+    map_color.WC[0]       -1  False
+    map_color.WC[1]       +1  True
+    map_color.valid       +1  True
 ```
 
 The `friendly-map` script post-processes the above into a more human-readable form:
