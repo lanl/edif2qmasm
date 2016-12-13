@@ -661,8 +661,3 @@ Claim #11: EC=2 GC=1 MC=0 QC=3 WC=0 --> True with tally = 2 and energy = -492.25
 Claim #12: EC=2 GC=3 MC=0 QC=3 WC=0 --> True with tally = 3 and energy = -492.25 [YES]
 Claim #13: EC=2 GC=3 MC=0 QC=3 WC=1 --> True with tally = 1 and energy = -492.25 [YES]
 ```
-
-Additional examples
--------------------
-
-More examples are forthcoming, but our first priority is to diagnose why the *mult* example is not behaving as expected.
