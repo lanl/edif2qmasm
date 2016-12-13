@@ -1,0 +1,58 @@
+#! /usr/bin/env perl
+
+###############################################################
+# Postprocess QMASM's output when run on map-color.edif to    #
+# show multiplication problems in a more user-friendly manner #
+#                                                             #
+# By Scott Pakin <pakin@lanl.gov>                             #
+###############################################################
+
+use warnings;
+use strict;
+
+my ($soln, $energy, $tally, $valid, $have_data) = (0) x 5;
+my %region2num;
+while (my $line = <>) {
+    chomp $line;
+    if ($line =~ /Solution \#(\d+) \(energy = (-?[\d.]+), tally = (\d+)\):/) {
+        # Reset the mapping for each solution.
+        ($soln, $energy, $tally) = ($1, $2, $3);
+        $valid = 0;
+        %region2num = ();
+        next;
+    }
+    if ($line =~ /^\s+map_color\.(\w+)\[(\d+)\].*(True|False)/) {
+        # Add a bit per line.
+        my ($region, $bit, $bool) = ($1, $2, $3);
+        my $base = $bool eq "True" ? 1 : 0;
+        $region2num{$region} |= $base<<$bit;
+        $have_data = 1;
+        next;
+    }
+    if ($line =~ /^\s+map_color\.valid.*(True|False)/) {
+        # Store the valid bit.
+        $valid = $1;
+        $have_data = 1;
+        next;
+    }
+    if ($have_data) {
+        # End of a table -- output what we have.
+        my $true_valid = 1;
+        $true_valid &&= $region2num{GC} != $region2num{WC};
+        $true_valid &&= $region2num{WC} != $region2num{QC};
+        $true_valid &&= $region2num{QC} != $region2num{MC};
+        $true_valid &&= $region2num{MC} != $region2num{GC};
+        $true_valid &&= $region2num{EC} != $region2num{GC};
+        $true_valid &&= $region2num{EC} != $region2num{WC};
+        $true_valid &&= $region2num{EC} != $region2num{QC};
+        $true_valid &&= $region2num{EC} != $region2num{MC};
+        printf "Claim \#%d:", $soln;
+        foreach my $region (sort keys %region2num) {
+            printf " %s=%d", $region, $region2num{$region};
+        }
+	my $claimed_valid = $valid eq "True" ? 1 : 0;
+        printf " --> %s with tally = %d and energy = %.2f [%s]\n", $valid, $tally, $energy, $claimed_valid == $true_valid ? "YES" : "NO";
+        $have_data = 0;
+        next;
+    }
+}

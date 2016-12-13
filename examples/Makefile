@@ -7,6 +7,7 @@
 
 VSOURCES = \
 	circsat.v \
+	map-color.v \
 	mult.v
 
 EDIFS = $(patsubst %.v, %.edif, $(VSOURCES))
