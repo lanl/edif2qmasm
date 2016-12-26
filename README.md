@@ -47,7 +47,7 @@ make
 make install
 ```
 
-This approach supported because it provides a few extra benefits over the simpler, `go get` approach:
+This approach is supported because it provides a few extra benefits over the simpler, `go get` approach:
 
 * `make clean` (and `make maintainer-clean`) can be used to clean up the build directory.
 * `make install` installs the binary, the standard-cell library (`stdcell.qmasm`), and the Unix man page into their standard locations
