@@ -76,7 +76,7 @@ SEE ALSO
 ========
 
 yosys(1),
-`the QMASM wiki <https://github.com/losalamos/qmasm/wiki>`__,
+`the QMASM wiki <https://github.com/lanl/qmasm/wiki>`__,
 `Wikipedia's entry on Verilog <https://en.wikipedia.org/wiki/Verilog>`__,
 `Wikipedia's entry on VHDL <https://en.wikipedia.org/wiki/VHDL>`__,
 `Wikipedia's entry on EDIF <https://en.wikipedia.org/wiki/EDIF>`__,

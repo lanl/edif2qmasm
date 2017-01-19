@@ -7,7 +7,7 @@ make
 ```
 to produce a `.edif` file from each `.v` file or use your favorite hardware-synthesis tool to perform the equivalent operation.
 
-`edif2qmasm` currently supports only a handful of gates (defined in [stdcell.qmasm](https://github.com/losalamos/edif2qmasm/blob/master/stdcell.qmasm)) so all designs must be compiled to use only those gates.
+`edif2qmasm` currently supports only a handful of gates (defined in [stdcell.qmasm](https://github.com/lanl/edif2qmasm/blob/master/stdcell.qmasm)) so all designs must be compiled to use only those gates.
 
 * 1-input: NOT
 * 2-input: AND, OR, XOR
@@ -18,7 +18,7 @@ The rest of this document describes each of the examples in turn.
 circsat
 -------
 
-[`circsat.v`](https://github.com/losalamos/edif2qmasm/blob/master/examples/circsat.v) implements an arbitrary circuit, specifically the one presented in [Cormen, Leiserson, Rivest, and Stein's Algorithms textbook](https://mitpress.mit.edu/books/introduction-algorithms) in its discussion of circuit-satisfiability problems.  The Verilog module's inputs are named *a*, *b*, and *c*, and the sole output is named *y*.  All are single bits.  Internally, inputs, outputs, and intermediate values are named *x*[1]…*x*[10].
+[`circsat.v`](https://github.com/lanl/edif2qmasm/blob/master/examples/circsat.v) implements an arbitrary circuit, specifically the one presented in [Cormen, Leiserson, Rivest, and Stein's Algorithms textbook](https://mitpress.mit.edu/books/introduction-algorithms) in its discussion of circuit-satisfiability problems.  The Verilog module's inputs are named *a*, *b*, and *c*, and the sole output is named *y*.  All are single bits.  Internally, inputs, outputs, and intermediate values are named *x*[1]…*x*[10].
 
 The goal of this example is to run the circuit *backward* to find out what set of inputs produces an output of *true*.  This is a classic NP-complete problem.  Here's how to run it on a D-Wave system using `edif2qmasm` and `qmasm`:
 ```bash
@@ -53,7 +53,7 @@ Note that we pinned the output to *true* while leaving the other parameters unsp
 mult
 ----
 
-Excluding the comments, module definition, and parameter declarations, [`mult.v`](https://github.com/losalamos/edif2qmasm/blob/master/examples/mult.v) is a one-line Verilog program:
+Excluding the comments, module definition, and parameter declarations, [`mult.v`](https://github.com/lanl/edif2qmasm/blob/master/examples/mult.v) is a one-line Verilog program:
 ```Verilog
 assign product = multiplicand * multiplier;
 ```
@@ -150,7 +150,7 @@ Claim #2:  5 *  3 = 15 [YES] -- 53 @ -460.75
 Map coloring
 ------------
 
-Map coloring is arguably the closest thing to a D-Wave "Hello, world!" program.  [`map-color.v`](https://github.com/losalamos/edif2qmasm/blob/master/examples/map-color.v) shows how map coloring can be implemented in Verilog with the intention of executing it on a D-Wave system.  The goal of map coloring is to color a given map using at most four colors such that no two adjacent regions use the same color.  `map-color.v` colors a map of the Land of Oz:
+Map coloring is arguably the closest thing to a D-Wave "Hello, world!" program.  [`map-color.v`](https://github.com/lanl/edif2qmasm/blob/master/examples/map-color.v) shows how map coloring can be implemented in Verilog with the intention of executing it on a D-Wave system.  The goal of map coloring is to color a given map using at most four colors such that no two adjacent regions use the same color.  `map-color.v` colors a map of the Land of Oz:
 
 ![Map of the Land of Oz](https://upload.wikimedia.org/wikipedia/commons/8/8e/Map-of-Oz.jpg)
 

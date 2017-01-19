@@ -17,14 +17,14 @@ Description
 * provides precise control over bit widths, which reduces the number of wasted qubits (a precious resource in contemporary D-Wave systems),
 * enables exploiting the code optimizations and debugging support provided by synthesis tools.
 
-More precisely, `edif2qmasm` converts from the [EDIF](https://en.wikipedia.org/wiki/EDIF) netlist format, which can be output by various synthesis tools, to the [QMASM](https://github.com/losalamos/qmasm) quantum macro assembly language. To date, `edif2qmasm` has been tested only with Verilog because there exist open-source compilers that convert Verilog to EDIF, and I don't know of an equivalent open-source tool that can convert VHDL to EDIF.
+More precisely, `edif2qmasm` converts from the [EDIF](https://en.wikipedia.org/wiki/EDIF) netlist format, which can be output by various synthesis tools, to the [QMASM](https://github.com/lanl/qmasm) quantum macro assembly language. To date, `edif2qmasm` has been tested only with Verilog because there exist open-source compilers that convert Verilog to EDIF, and I don't know of an equivalent open-source tool that can convert VHDL to EDIF.
 
 Installation
 ------------
 
 `edif2qmasm` is written in [Go](https://golang.org/) and therefore depends upon a Go compiler to build.
 
-Note that `edif2qmasm` is of limited use withut a compiler than can produce EDIF netlists and [QMASM](https://github.com/losalamos/qmasm), which executes the generated code on a D-Wave system.  To date, `edif2qmasm` has been tested only with the [Yosys Open SYnthesis Suite](http://www.clifford.at/yosys/), but reports of usage with other synthesis tools (successful or not) are welcome.  Note that QMASM relies on D-Wave's proprietary libraries to operate.
+Note that `edif2qmasm` is of limited use withut a compiler than can produce EDIF netlists and [QMASM](https://github.com/lanl/qmasm), which executes the generated code on a D-Wave system.  To date, `edif2qmasm` has been tested only with the [Yosys Open SYnthesis Suite](http://www.clifford.at/yosys/), but reports of usage with other synthesis tools (successful or not) are welcome.  Note that QMASM relies on D-Wave's proprietary libraries to operate.
 
 There are two ways to build `edif2qmasm`: the `go get` approach and the `make` approach.
 
@@ -32,7 +32,7 @@ There are two ways to build `edif2qmasm`: the `go get` approach and the `make` a
 
 Download, build, and install `edif2qmasm` (into your `$GOPATH/bin/` directory) with
 ```bash
-go get github.com/losalamos/edif2qmasm
+go get github.com/lanl/edif2qmasm
 ```
 
 You'll also need to copy `stdcell.qmasm` somewhere, say into `/usr/local/share/edif2qmasm/`.  Optionally, you can install the `edif2qmasm.1` man page, say into `/usr/local/share/man/man1/`.
@@ -41,7 +41,7 @@ You'll also need to copy `stdcell.qmasm` somewhere, say into `/usr/local/share/e
 
 As an alternative installation procedure, one can download the code explicitly and build it using the supplied `Makefile`:
 ```bash
-git clone https://github.com/losalamos/edif2qmasm.git
+git clone https://github.com/lanl/edif2qmasm.git
 cd edif2qmasm
 make
 make install
@@ -73,8 +73,8 @@ Documentation
 
 In addition to this file, two other sources of documentation are
 
-* [the `edif2qmasm` manual page](https://github.com/losalamos/edif2qmasm/blob/master/edif2qmasm.rst) and
-* [the `README.md` file in the `examples` directory](https://github.com/losalamos/edif2qmasm/blob/master/examples/README.md).
+* [the `edif2qmasm` manual page](https://github.com/lanl/edif2qmasm/blob/master/edif2qmasm.rst) and
+* [the `README.md` file in the `examples` directory](https://github.com/lanl/edif2qmasm/blob/master/examples/README.md).
 
 Limitations
 -----------
@@ -108,7 +108,7 @@ make install
 License
 -------
 
-`edif2qmasm` is provided under a BSD-ish license with a "modifications must be indicated" clause.  See [the LICENSE file](https://github.com/losalamos/edif2qmasm/blob/master/LICENSE.md) for the full text.
+`edif2qmasm` is provided under a BSD-ish license with a "modifications must be indicated" clause.  See [the LICENSE file](https://github.com/lanl/edif2qmasm/blob/master/LICENSE.md) for the full text.
 
 `edif2qmasm` is part of the Hybrid Quantum-Classical Computing suite, known internally as LA-CC-16-032.
 

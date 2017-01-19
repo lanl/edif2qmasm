@@ -20,7 +20,7 @@ Usage:
 
     edif2qmasm myfile.edif > myfile.qmasm
 
-See https://github.com/losalamos/edif2qmasm for more information.
+See https://github.com/lanl/edif2qmasm for more information.
 */
 package main
 
