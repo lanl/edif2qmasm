@@ -7,6 +7,9 @@ import (
 	"fmt"
 )
 
+// isFlipFlop indicates that a given macro name represents a flip-flop.
+var isFlipFlop map[EdifSymbol]bool = make(map[EdifSymbol]bool)
+
 // ConvertMetadata converts top-level metadata to QMASM.
 func ConvertMetadata(s EdifSExp) []QmasmCode {
 	hdr := make([]QmasmCode, 0, 1)
@@ -85,13 +88,18 @@ func ConvertInstance(inst EdifList, i2n map[EdifSymbol]EdifString) []QmasmCode {
 		macroName = EdifSymbol(cName) // Renamed cell (e.g., "id0123" --> "AND")
 	}
 
+	// Keep track of whether the macro represents a flip-flop.
+	isFlipFlop[instSym] = false
+	if macroName == "DFF_P" || macroName == "DFF_N" {
+		isFlipFlop[instSym] = true
+	}
+
 	// Construct and return a macro instantiation.
 	code = append(code, QmasmMacroUse{
 		MacroName: string(macroName),
 		UseName:   "$" + string(instSym),
 		Comment:   comment,
 	})
-
 	return code
 }
 
@@ -112,8 +120,7 @@ func PortRefToString(pRef EdifList) string {
 		pName = string(AsSymbol(pRef[1]))
 
 	case List:
-		// Index into a multi-bit port.  Return as
-		// "symbol[port]".
+		// Index into a multi-bit port.  Return as "symbol[port]".
 		memb := AsList(pRef[1], 3, "member")
 		base := AsSymbol(memb[1])
 		idx := AsInteger(memb[2])
@@ -125,24 +132,72 @@ func PortRefToString(pRef EdifList) string {
 
 	// If provided, the second element after "portRef" is the cell the port
 	// belongs to.
-	if nParts > 2 {
-		instRef := AsList(pRef[2], 2, "instanceRef")
-		pName = "$" + string(AsSymbol(instRef[1])) + "." + pName
+	if nParts <= 2 {
+		return pName
 	}
-	return pName
+	instRef := AsList(pRef[2], 2, "instanceRef")
+	return "$" + string(AsSymbol(instRef[1])) + "." + pName
+}
+
+// PortRefFlipFlopPort takes an EDIF portRef and returns its port name if the
+// cell represents a flip-flip or the empty string otherwise.  This is a helper
+// function for ConvertNet.
+func PortRefFlipFlopPort(pRef EdifList) string {
+	// We can handle only 2- or 3-element portRefs.
+	nParts := len(pRef)
+	if nParts != 2 && nParts != 3 {
+		notify.Fatalf("Expected 2 or 3 elements in a portRef; saw %v", pRef)
+	}
+
+	// The first element after "portRef" is the port name.
+	var pName string
+	switch pRef[1].Type() {
+	case Symbol:
+		// Single-bit
+		pName = string(AsSymbol(pRef[1]))
+
+	case List:
+		// Index into a multi-bit port.  Flip-flops never use this
+		// feature.
+		return ""
+
+	default:
+		notify.Fatalf("Expected a symbol or list in portRef but saw %v", pRef)
+	}
+
+	// If provided, the second element after "portRef" is the cell the port
+	// belongs to.
+	if nParts <= 2 {
+		return ""
+	}
+	instRef := AsList(pRef[2], 2, "instanceRef")
+	instSym := AsSymbol(instRef[1])
+	if isFlipFlop[instSym] {
+		return pName
+	}
+	return ""
 }
 
 // ConvertNet converts an EDIF net to a QMASM chain ("=").
 func ConvertNet(net EdifList) []QmasmCode {
+	// Keep track of port names and flip-flop status.
+	type PortInfo struct {
+		Name   string
+		FFPort string
+	}
+	pInfo := make([]PortInfo, 0, 2)
+
 	// Determine the name of each port.
-	portName := make([]string, 0, 2)
 	for _, pRef := range net.NestedSublistsByName([]EdifSymbol{
 		"joined",
 		"portRef",
 	}) {
-		portName = append(portName, PortRefToString(pRef))
+		pInfo = append(pInfo, PortInfo{
+			Name:   PortRefToString(pRef),
+			FFPort: PortRefFlipFlopPort(pRef),
+		})
 	}
-	if len(portName) < 2 {
+	if len(pInfo) < 2 {
 		// I don't know what a single-portRef net is supposed to do so
 		// I'm guessing we can ignore it.
 		return nil
@@ -156,7 +211,7 @@ func ConvertNet(net EdifList) []QmasmCode {
 	}
 
 	// Return one or more QMASM chains/pins.
-	nPorts := len(portName)
+	nPorts := len(pInfo)
 	code := make([]QmasmCode, 0, (nPorts*(nPorts-1))/2)
 	special := map[string]bool{
 		"$GND.G": false,
@@ -164,20 +219,28 @@ func ConvertNet(net EdifList) []QmasmCode {
 	}
 	for i := 0; i < nPorts-1; i++ {
 		for j := i + 1; j < nPorts; j++ {
-			i_val, i_pinned := special[portName[j]]
-			j_val, j_pinned := special[portName[i]]
+			i_val, i_pinned := special[pInfo[j].Name]
+			j_val, j_pinned := special[pInfo[i].Name]
+			i_prefix := ""
+			if pInfo[j].FFPort == "Q" {
+				i_prefix = "!next."
+			}
+			j_prefix := ""
+			if pInfo[i].FFPort == "Q" {
+				i_prefix = "!next."
+			}
 			switch {
 			case !i_pinned && !j_pinned:
 				// Neither port is VCC or GND.
 				code = append(code, QmasmChain{
-					Var:     [2]string{portName[i], portName[j]},
+					Var:     [2]string{i_prefix + pInfo[i].Name, j_prefix + pInfo[j].Name},
 					Comment: comment,
 				})
 
 			case i_pinned && !j_pinned:
 				// Only port i is VCC or GND.
 				code = append(code, QmasmPin{
-					Var:     portName[i],
+					Var:     pInfo[i].Name,
 					Value:   i_val,
 					Comment: comment,
 				})
@@ -185,7 +248,7 @@ func ConvertNet(net EdifList) []QmasmCode {
 			case !i_pinned && j_pinned:
 				// Only port j is VCC or GND.
 				code = append(code, QmasmPin{
-					Var:     portName[j],
+					Var:     pInfo[j].Name,
 					Value:   j_val,
 					Comment: comment,
 				})

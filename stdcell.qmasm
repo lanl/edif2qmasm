@@ -71,6 +71,16 @@
   Y $a1  1
 !end_macro MUX
 
+# Q = D (clock is ignored)
+!begin_macro DFF_P
+  Q = D
+!end_macro DFF_P
+
+# Q = D (clock is ignored)
+!begin_macro DFF_N
+  Q = D
+!end_macro DFF_N
+
 # Constants for power and ground.
 !alias VCC true
 !alias GND false
