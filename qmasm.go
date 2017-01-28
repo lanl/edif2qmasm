@@ -53,14 +53,14 @@ func (m QmasmMacroDef) String() string {
 
 // A QmasmMacroUse instantiates a QMASM macro.
 type QmasmMacroUse struct {
-	MacroName string // Name of the macro to instantiate
-	UseName   string // Name of the instantiation
-	Comment   string // Optional comment
+	MacroName string   // Name of the macro to instantiate
+	UseNames  []string // Name(s) of the instantiation
+	Comment   string   // Optional comment
 }
 
 // String outputs a QMASM macro use.
 func (u QmasmMacroUse) String() string {
-	str := "!use_macro " + u.MacroName + " " + u.UseName
+	str := "!use_macro " + u.MacroName + " " + strings.Join(u.UseNames, " ")
 	if u.Comment != "" {
 		str += "  # " + u.Comment
 	}

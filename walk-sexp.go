@@ -97,7 +97,7 @@ func ConvertInstance(inst EdifList, i2n map[EdifSymbol]EdifString) []QmasmCode {
 	// Construct and return a macro instantiation.
 	code = append(code, QmasmMacroUse{
 		MacroName: string(macroName),
-		UseName:   "$" + string(instSym),
+		UseNames:  []string{"$" + string(instSym)},
 		Comment:   comment,
 	})
 	return code
@@ -295,14 +295,23 @@ func ConvertCell(cell EdifList, i2n map[EdifSymbol]EdifString) QmasmMacroDef {
 }
 
 // ConvertDesign converts a design to a QMASM macro instantiation.
-func ConvertDesign(des EdifList) QmasmMacroUse {
+func ConvertDesign(des EdifList, nCycles uint) QmasmMacroUse {
 	if len(des) != 3 {
 		notify.Fatalf("Expected a design to contain exactly 3 elements but saw %v", des)
 	}
 	cRef := AsList(des[2], 3, "cellRef")
+	name := string(AsSymbol(des[1]))
+	uNames := make([]string, nCycles)
+	if nCycles == 1 {
+		uNames[0] = name
+	} else {
+		for i := range uNames {
+			uNames[i] = fmt.Sprintf("%s@%d", name, i)
+		}
+	}
 	return QmasmMacroUse{
 		MacroName: string(AsSymbol(cRef[1])),
-		UseName:   string(AsSymbol(des[1])),
+		UseNames:  uNames,
 	}
 }
 
@@ -319,7 +328,7 @@ func ConvertLibrary(lib EdifList, i2n map[EdifSymbol]EdifString) []QmasmCode {
 
 // ConvertEdifToQmasm takes an EDIF s-expression and returns a list of QMASM
 // statements.
-func ConvertEdifToQmasm(s EdifSExp) []QmasmCode {
+func ConvertEdifToQmasm(s EdifSExp, nCycles uint) []QmasmCode {
 	// Produce a QMASM header block.
 	code := make([]QmasmCode, 0, 128)
 	code = append(code, ConvertMetadata(s)...)
@@ -344,7 +353,7 @@ func ConvertEdifToQmasm(s EdifSExp) []QmasmCode {
 	// Convert each design in turn.
 	for _, des := range slst.SublistsByName("design") {
 		code = append(code, QmasmBlank{})
-		code = append(code, ConvertDesign(des))
+		code = append(code, ConvertDesign(des, nCycles))
 	}
 
 	return code

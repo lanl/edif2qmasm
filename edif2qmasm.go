@@ -25,6 +25,7 @@ See https://github.com/lanl/edif2qmasm for more information.
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -46,17 +47,22 @@ func main() {
 	var err error
 	progName := path.Base(os.Args[0])
 	notify = log.New(os.Stderr, progName+": ", 0)
+	nCycles := flag.Uint("cycles", 1, "number of clock cycles")
+	flag.Parse()
+
+	// Open the input file.
 	var r io.Reader
-	switch len(os.Args) {
-	case 1:
+	switch flag.NArg() {
+	case 0:
 		r = os.Stdin
-	case 2:
-		f, err := os.Open(os.Args[1])
+	case 1:
+		f, err := os.Open(flag.Arg(0))
 		if err != nil {
 			notify.Fatal(err)
 		}
 		defer f.Close()
 		r = f
+
 	default:
 		fmt.Fprintf(os.Stderr, "Usage: %s [<input.edif>]\n", progName)
 		os.Exit(1)
@@ -73,7 +79,7 @@ func main() {
 	}
 
 	// Convert the s-expression to QMASM source code.
-	code := ConvertEdifToQmasm(top)
+	code := ConvertEdifToQmasm(top, *nCycles)
 	for _, q := range code {
 		fmt.Printf("%s", q)
 	}
