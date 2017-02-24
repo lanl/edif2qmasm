@@ -11,14 +11,24 @@ VSOURCES = \
 	mult.v
 
 EDIFS = $(patsubst %.v, %.edif, $(VSOURCES))
+QMASMS = $(patsubst %.v, %.qmasm, $(VSOURCES))
 YOSYS = yosys
+E2Q = ../edif2qmasm
 
-all: $(EDIFS)
+all: edif
+
+edif: $(EDIFS)
 
 %.edif: %.v synth.ys
 	$(YOSYS) -q $< synth.ys -b edif -o $@
 
+qmasm: $(QMASMS)
+
+%.qmasm: %.edif
+	$(E2Q) $< > $@
+
 clean:
+	$(RM) $(QMASMS)
 	$(RM) $(EDIFS)
 
-.PHONY: all clean
+.PHONY: all clean edif qmasm
