@@ -47,7 +47,14 @@ func main() {
 	var err error
 	progName := path.Base(os.Args[0])
 	notify = log.New(os.Stderr, progName+": ", 0)
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: %s [<option>]... [<input.edif>]\n", progName)
+		flag.PrintDefaults()
+	}
 	nCycles := flag.Uint("cycles", 1, "number of clock cycles")
+	outName := "-"
+	flag.StringVar(&outName, "output", "-", "name of QMASM output file or \"-\" for stdout")
+	flag.StringVar(&outName, "o", "-", "same as -output")
 	flag.Parse()
 
 	// Open the input file.
@@ -64,8 +71,20 @@ func main() {
 		r = f
 
 	default:
-		fmt.Fprintf(os.Stderr, "Usage: %s [<input.edif>]\n", progName)
-		os.Exit(1)
+		notify.Fatal("Too many input files")
+	}
+
+	// Open the output file.
+	var out io.Writer
+	if outName == "-" {
+		out = os.Stdout
+	} else {
+		f, err := os.Create(outName)
+		if err != nil {
+			notify.Fatal(err)
+		}
+		defer f.Close()
+		out = f
 	}
 
 	// Parse the specified EDIF file into a top-level s-expression.
@@ -81,6 +100,6 @@ func main() {
 	// Convert the s-expression to QMASM source code.
 	code := ConvertEdifToQmasm(top, *nCycles)
 	for _, q := range code {
-		fmt.Printf("%s", q)
+		fmt.Fprintf(out, "%s", q)
 	}
 }
