@@ -5,7 +5,7 @@
 ###############################################################
 
 # Check design hierarchy.
-hierarchy
+hierarchy -auto-top
 
 # Translate processes.
 proc; opt
