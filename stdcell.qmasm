@@ -9,6 +9,10 @@
 # absolute value is 1.0.  This may change in a future version of this
 # library.
 
+# Constants for power and ground.
+!alias VCC true
+!alias GND false
+
 # Y = A AND B
 !begin_macro AND
   A -0.5
@@ -59,7 +63,7 @@
   Y    0.5
   $a1  1
 
-  S A   0.25
+  S A    0.25
   S B   -0.25
   S Y    0.5
   S $a1  1
@@ -81,6 +85,134 @@
   Q = D
 !end_macro DFF_N
 
-# Constants for power and ground.
-!alias VCC true
-!alias GND false
+# Y = NOT (A AND B)
+!begin_macro NAND
+  A -0.5
+  B -0.5
+  Y -1
+
+  A B  0.5
+  A Y  1
+  B Y  1
+!end_macro NAND
+
+# Y = NOT (A OR B)
+!begin_macro NOR
+  A 0.5
+  B 0.5
+  Y 1
+
+  A B 0.5
+  A Y 1
+  B Y 1
+!end_macro NOR
+
+# Y = NOT (A XOR B)
+!begin_macro XNOR
+  A    0.5
+  B   -0.5
+  Y    0.5
+  $a1  1
+
+  A B   -0.5
+  A Y    0.5
+  A $a1  1
+  B Y   -0.5
+  B $a1 -1
+  Y $a1  1
+!end_macro XNOR
+
+# Y = NOT ((A AND B) OR C)
+!begin_macro AOI3
+  A    0.0000
+  B   -0.3333
+  C    0.3333
+  Y    0.6667
+  $a1 -0.6667
+
+  A   B    0.3333
+  A   C    0.3333
+  A   Y    0.3333
+  A   $a1  0.3333
+  B   Y   -0.3333
+  B   $a1  1.0000
+  C   Y    1.0000
+  C   $a1 -0.3333
+  Y   $a1 -1.0000
+!end_macro AOI3
+
+# Y = NOT ((A AND B) OR (C AND D))
+!begin_macro AOI4
+  A   -0.1667
+  B   -0.1667
+  C   -0.4167
+  D    0.2500
+  Y   -0.4167
+  $a1 -0.5833
+  $a2  0.1667
+
+  A   B    0.1667
+  A   C    0.3333
+  A   D   -0.0833
+  A   Y    0.5000
+  A   $a1  0.3333
+  A   $a2 -0.2500
+  B   C    0.3333
+  B   D   -0.0833
+  B   Y    0.5000
+  B   $a1  0.3333
+  B   $a2 -0.2500
+  C   D   -0.3333
+  C   Y    0.9167
+  C   $a1  0.9167
+  C   $a2 -0.4167
+  D   Y   -0.3333
+  D   $a1 -0.5833
+  D   $a2  0.3333
+  Y   $a1  1.0000
+  Y   $a2 -0.6667
+  $a1 $a2 -0.5833
+!end_macro AOI4
+
+# Y = NOT ((A OR B) AND C)
+!begin_macro OAI3
+  A   -0.25
+  B    0
+  C   -0.75
+  Y   -0.5
+  $a1 -0.5
+
+  A C    0.75
+  A Y    0.5
+  A $a1  0.5
+  B Y    0.25
+  B $a1 -0.25
+  C Y    1
+  C $a1  1
+  Y $a1  0.25
+!end_macro OAI3
+
+# Y = NOT ((A OR B) AND (C OR D))
+!begin_macro OAI4
+  A    0.6667
+  B   -0.3333
+  C   -0.3333
+  D   -0.3333
+  Y   -0.3333
+  $a1 -1.0000
+  $a2 -1.0000
+
+  A   B   -0.3333
+  A   Y    0.3333
+  A   $a1 -0.3333
+  A   $a2 -1.0000
+  B   $a2  0.6667
+  C   D    0.3333
+  C   Y    0.6667
+  C   $a1  0.6667
+  D   Y    0.6667
+  D   $a1  0.6667
+  Y   $a1  1.0000
+  Y   $a2 -0.3333
+  $a1 $a2  0.3333
+!end_macro OAI4

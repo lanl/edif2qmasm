@@ -16,5 +16,8 @@ fsm; opt
 # Convert to gate logic.
 techmap; opt
 
+# Recast in terms of more gate types.
+abc -g AND,NAND,OR,NOR,XOR,XNOR,MUX,AOI3,OAI3,AOI4,OAI4; opt
+
 # Clean up.
 clean
