@@ -45,7 +45,7 @@ func (m QmasmMacroDef) String() string {
 	}
 	lines = append(lines, "!begin_macro "+m.Name+"\n")
 	for _, ln := range m.Body {
-		lines = append(lines, ln.String())
+		lines = append(lines, "  " + ln.String())
 	}
 	lines = append(lines, "!end_macro "+m.Name+"\n")
 	return strings.Join(lines, "")

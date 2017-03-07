@@ -346,6 +346,7 @@ func ConvertLibrary(lib EdifList, i2n map[EdifSymbol]EdifString) []QmasmCode {
 	// Iterate over each cell.
 	code := make([]QmasmCode, 0, 32)
 	for _, cell := range lib.SublistsByName("cell") {
+		code = append(code, QmasmBlank{})
 		code = append(code, ConvertCell(cell, i2n))
 	}
 	return code
@@ -371,7 +372,6 @@ func ConvertEdifToQmasm(s EdifSExp, nCycles uint) []QmasmCode {
 
 	// Convert each user-defined library in turn.
 	for _, lib := range slst.SublistsByName("library") {
-		code = append(code, QmasmBlank{})
 		code = append(code, ConvertLibrary(lib, idToName)...)
 	}
 
