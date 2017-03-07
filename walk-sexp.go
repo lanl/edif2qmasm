@@ -14,9 +14,16 @@ var isFlipFlop map[EdifSymbol]bool = make(map[EdifSymbol]bool)
 func ConvertMetadata(s EdifSExp) []QmasmCode {
 	hdr := make([]QmasmCode, 0, 1)
 	el := AsList(s, 1, "edif")
+	var modName string
+	if el[1].Type() == List {
+		ren := AsList(el[1], 3, "rename")
+		modName = string(AsString(ren[2]))
+	} else {
+		modName = string(AsSymbol(el[1]))
+	}
 	hdr = append(hdr, QmasmComment{
-		Comment: "Module " + string(AsSymbol(el[1]))},
-	)
+		Comment: "Module " + modName,
+	})
 	cmts := el.SublistsByName("comment")
 	for _, c := range cmts {
 		hdr = append(hdr, QmasmComment{
@@ -287,10 +294,22 @@ func ConvertCell(cell EdifList, i2n map[EdifSymbol]EdifString) QmasmMacroDef {
 		code = append(code, ConvertNet(net)...)
 	}
 
+	// Extract the cell's name.
+	var cellName string
+	var cellComment string
+	if cell[1].Type() == List {
+		ren := AsList(cell[1], 3, "rename")
+		cellName = string(AsSymbol(ren[1]))
+		cellComment = string(AsString(ren[2]))
+	} else {
+		cellName = string(AsSymbol(cell[1]))
+	}
+
 	// Wrap the code in a QMASM macro definition and return it.
 	return QmasmMacroDef{
-		Name: string(AsSymbol(cell[1])),
-		Body: code,
+		Name:    cellName,
+		Body:    code,
+		Comment: cellComment,
 	}
 }
 
@@ -300,7 +319,15 @@ func ConvertDesign(des EdifList, nCycles uint) QmasmMacroUse {
 		notify.Fatalf("Expected a design to contain exactly 3 elements but saw %v", des)
 	}
 	cRef := AsList(des[2], 3, "cellRef")
-	name := string(AsSymbol(des[1]))
+	var name string
+	var comment string
+	if des[1].Type() == List {
+		ren := AsList(des[1], 3, "rename")
+		name = string(AsSymbol(ren[1]))
+		comment = string(AsString(ren[2]))
+	} else {
+		name = string(AsSymbol(des[1]))
+	}
 	uNames := make([]string, nCycles)
 	if nCycles == 1 {
 		uNames[0] = name
@@ -312,6 +339,7 @@ func ConvertDesign(des EdifList, nCycles uint) QmasmMacroUse {
 	return QmasmMacroUse{
 		MacroName: string(AsSymbol(cRef[1])),
 		UseNames:  uNames,
+		Comment:   comment,
 	}
 }
 
