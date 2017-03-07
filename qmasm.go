@@ -30,6 +30,23 @@ func (c QmasmChain) String() string {
 	}
 }
 
+// A QmasmAlias indicates that a single variable should have two names.
+type QmasmAlias struct {
+	Alias   string // New name
+	Var     string // Old name
+	Comment string // Optional comment
+}
+
+// String outputs a QmasmAlias as a line of QMASM code, including a training
+// newline.
+func (c QmasmAlias) String() string {
+	if c.Comment == "" {
+		return fmt.Sprintf("%s <-> %s\n", c.Alias, c.Var)
+	} else {
+		return fmt.Sprintf("%s <-> %s  # %s\n", c.Alias, c.Var, c.Comment)
+	}
+}
+
 // A QmasmMacroDef represents a QMASM macro definition.
 type QmasmMacroDef struct {
 	Name    string      // Macro name
@@ -45,7 +62,7 @@ func (m QmasmMacroDef) String() string {
 	}
 	lines = append(lines, "!begin_macro "+m.Name+"\n")
 	for _, ln := range m.Body {
-		lines = append(lines, "  " + ln.String())
+		lines = append(lines, "  "+ln.String())
 	}
 	lines = append(lines, "!end_macro "+m.Name+"\n")
 	return strings.Join(lines, "")

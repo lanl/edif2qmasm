@@ -239,10 +239,18 @@ func ConvertNet(net EdifList) []QmasmCode {
 			switch {
 			case !i_pinned && !j_pinned:
 				// Neither port is VCC or GND.
+				iName := i_prefix + pInfo[i].Name
+				jName := j_prefix + pInfo[j].Name
 				code = append(code, QmasmChain{
-					Var:     [2]string{i_prefix + pInfo[i].Name, j_prefix + pInfo[j].Name},
+					Var:     [2]string{iName, jName},
 					Comment: comment,
 				})
+				if comment != "" && comment != iName && comment != jName {
+					code = append(code, QmasmAlias{
+						Alias: comment,
+						Var:   iName,
+					})
+				}
 
 			case i_pinned && !j_pinned:
 				// Only port i is VCC or GND.
