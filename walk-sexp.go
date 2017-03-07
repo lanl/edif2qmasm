@@ -320,11 +320,9 @@ func ConvertDesign(des EdifList, nCycles uint) QmasmMacroUse {
 	}
 	cRef := AsList(des[2], 3, "cellRef")
 	var name string
-	var comment string
 	if des[1].Type() == List {
 		ren := AsList(des[1], 3, "rename")
-		name = string(AsSymbol(ren[1]))
-		comment = string(AsString(ren[2]))
+		name = string(AsString(ren[2]))
 	} else {
 		name = string(AsSymbol(des[1]))
 	}
@@ -339,7 +337,6 @@ func ConvertDesign(des EdifList, nCycles uint) QmasmMacroUse {
 	return QmasmMacroUse{
 		MacroName: string(AsSymbol(cRef[1])),
 		UseNames:  uNames,
-		Comment:   comment,
 	}
 }
 
