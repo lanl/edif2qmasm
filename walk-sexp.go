@@ -10,19 +10,31 @@ import (
 // isFlipFlop indicates that a given macro name represents a flip-flop.
 var isFlipFlop map[EdifSymbol]bool = make(map[EdifSymbol]bool)
 
+// Given a list of the form (<anything> <name>) or (<anything> (rename
+// <name> <comment>)), extract and return <name> and <comment>.
+func nameAndComment(e EdifSExp) (EdifSymbol, string) {
+	var name EdifSymbol
+	var comment string
+	if e.Type() == List {
+		ren := AsList(e, 3, "rename")
+		name = AsSymbol(ren[1])
+		comment = string(AsString(ren[2]))
+	} else {
+		name = AsSymbol(e)
+	}
+	if len(comment) >= 2 && comment[0] == '\\' {
+		comment = comment[1:]
+	}
+	return name, comment
+}
+
 // ConvertMetadata converts top-level metadata to QMASM.
 func ConvertMetadata(s EdifSExp) []QmasmCode {
 	hdr := make([]QmasmCode, 0, 1)
 	el := AsList(s, 1, "edif")
-	var modName string
-	if el[1].Type() == List {
-		ren := AsList(el[1], 3, "rename")
-		modName = string(AsString(ren[2]))
-	} else {
-		modName = string(AsSymbol(el[1]))
-	}
+	modName, _ := nameAndComment(el[1])
 	hdr = append(hdr, QmasmComment{
-		Comment: "Module " + modName,
+		Comment: "Module " + string(modName),
 	})
 	cmts := el.SublistsByName("comment")
 	for _, c := range cmts {
@@ -69,19 +81,9 @@ func ProcessExternalLib(e EdifList) map[EdifSymbol]EdifString {
 func ConvertInstance(inst EdifList, i2n map[EdifSymbol]EdifString) []QmasmCode {
 	// Extract the instantiation name.
 	code := make([]QmasmCode, 0, 1)
-	var instSym EdifSymbol // Instantiated macro name
-	var comment string     // Comment describing the instantiation
-	switch inst[1].Type() {
-	case Symbol:
-		instSym = AsSymbol(inst[1])
-		if instSym == "GND" || instSym == "VCC" {
-			return nil // GND and VCC are treated specially.
-		}
-
-	case List:
-		ren := AsList(inst[1], 3, "rename")
-		instSym = AsSymbol(ren[1])
-		comment = string(AsString(ren[2]))
+	instSym, comment := nameAndComment(inst[1])
+	if instSym == "GND" || instSym == "VCC" {
+		return nil // GND and VCC are treated specially.
 	}
 
 	// Extract the macro name.
@@ -186,7 +188,7 @@ func PortRefFlipFlopPort(pRef EdifList) string {
 }
 
 // ConvertNet converts an EDIF net to a QMASM chain ("=").
-func ConvertNet(net EdifList) []QmasmCode {
+func ConvertNet(net EdifList, iface map[EdifSymbol]struct{}) []QmasmCode {
 	// Keep track of port names and flip-flop status.
 	type PortInfo struct {
 		Name   string
@@ -211,11 +213,7 @@ func ConvertNet(net EdifList) []QmasmCode {
 	}
 
 	// Treat a renamed net as a comment.
-	comment := ""
-	if net[1].Type() == List {
-		ren := AsList(net[1], 3, "rename")
-		comment = string(AsString(ren[2]))
-	}
+	_, comment := nameAndComment(net[1])
 
 	// Return one or more QMASM chains/pins.
 	nPorts := len(pInfo)
@@ -223,6 +221,24 @@ func ConvertNet(net EdifList) []QmasmCode {
 	special := map[string]bool{
 		"$GND.G": false,
 		"$VCC.P": true,
+	}
+	aliased := make(map[string]struct{}) // Already-aliased variables
+	addAlias := func(comment, iName, jName string) {
+		// Add aliases for external interfaces.
+		if comment == "" || comment == iName || comment == jName {
+			return
+		}
+		if _, seen := aliased[comment]; seen {
+			return
+		}
+		if _, ext := iface[EdifSymbol(comment)]; ext {
+			code = append(code, QmasmAlias{
+				Alias: comment,
+				Var:   iName,
+			})
+			aliased[comment] = struct{}{}
+			return
+		}
 	}
 	for i := 0; i < nPorts-1; i++ {
 		for j := i + 1; j < nPorts; j++ {
@@ -245,12 +261,7 @@ func ConvertNet(net EdifList) []QmasmCode {
 					Var:     [2]string{iName, jName},
 					Comment: comment,
 				})
-				if comment != "" && comment != iName && comment != jName {
-					code = append(code, QmasmAlias{
-						Alias: comment,
-						Var:   iName,
-					})
-				}
+				addAlias(comment, iName, jName)
 
 			case i_pinned && !j_pinned:
 				// Only port i is VCC or GND.
@@ -276,12 +287,68 @@ func ConvertNet(net EdifList) []QmasmCode {
 	return code
 }
 
+// ParseInterface extracts a cell interface and parses it into a set of port
+// names.
+func ParseInterface(cell EdifList) map[EdifSymbol]struct{} {
+	// Find the interface.
+	ifs := cell.NestedSublistsByName([]EdifSymbol{"view", "interface"})
+	if len(ifs) != 1 {
+		notify.Fatalf("Expected exactly one interface; saw %d", len(ifs))
+	}
+
+	// Process each port in the interface in turn.
+	pNames := make(map[EdifSymbol]struct{}, len(ifs[0])-1)
+	for _, p := range ifs[0][1:] {
+		port := AsList(p, 3, "port")
+		switch port[1].Type() {
+		case Symbol:
+			// Single bit
+			pNames[AsSymbol(port[1])] = struct{}{}
+
+		case List:
+			pList := port[1].(EdifList)
+			switch AsSymbol(pList[0]) {
+			case "array":
+				// Array of bits, zero-based.
+				array := AsList(port[1], 3, "array")
+				aLen := int(AsInteger(array[2]))
+				bSym, base := nameAndComment(array[1])
+				if base == "" {
+					base = string(bSym)
+				}
+				for i := 0; i < aLen; i++ {
+					sym := fmt.Sprintf("%s[%d]", base, i)
+					pNames[EdifSymbol(sym)] = struct{}{}
+				}
+
+			case "rename":
+				// Renamed single bit
+				sym, comment := nameAndComment(port[1])
+				if comment != "" {
+					sym = EdifSymbol(sym)
+				}
+				pNames[sym] = struct{}{}
+
+			default:
+				notify.Fatalf("Failed to parse a port list of type %q", AsSymbol(pList[0]))
+			}
+
+		default:
+			notify.Fatalf("Expected a symbol or list in port but saw %v", port)
+		}
+	}
+	return pNames
+}
+
 // ConvertCell converts a user-defined cell to a QMASM macro definition.
 func ConvertCell(cell EdifList, i2n map[EdifSymbol]EdifString) QmasmMacroDef {
 	// Ensure the cell looks at least a little like what we expect.
 	if len(cell) < 3 {
 		notify.Fatalf("Cell %v contains too few components", cell)
 	}
+
+	// Extract the cell's external interface.
+	iface := ParseInterface(cell)
 
 	// Instantiate all the other cells used by the current cell.
 	code := make([]QmasmCode, 0, 32)
@@ -299,25 +366,15 @@ func ConvertCell(cell EdifList, i2n map[EdifSymbol]EdifString) QmasmMacroDef {
 		"contents",
 		"net",
 	}) {
-		code = append(code, ConvertNet(net)...)
-	}
-
-	// Extract the cell's name.
-	var cellName string
-	var cellComment string
-	if cell[1].Type() == List {
-		ren := AsList(cell[1], 3, "rename")
-		cellName = string(AsSymbol(ren[1]))
-		cellComment = string(AsString(ren[2]))
-	} else {
-		cellName = string(AsSymbol(cell[1]))
+		code = append(code, ConvertNet(net, iface)...)
 	}
 
 	// Wrap the code in a QMASM macro definition and return it.
+	cName, cComment := nameAndComment(cell[1])
 	return QmasmMacroDef{
-		Name:    cellName,
+		Name:    string(cName),
 		Body:    code,
-		Comment: cellComment,
+		Comment: cComment,
 	}
 }
 
@@ -327,16 +384,10 @@ func ConvertDesign(des EdifList, nCycles uint) QmasmMacroUse {
 		notify.Fatalf("Expected a design to contain exactly 3 elements but saw %v", des)
 	}
 	cRef := AsList(des[2], 3, "cellRef")
-	var name string
-	if des[1].Type() == List {
-		ren := AsList(des[1], 3, "rename")
-		name = string(AsString(ren[2]))
-	} else {
-		name = string(AsSymbol(des[1]))
-	}
+	name, comment := nameAndComment(des[1])
 	uNames := make([]string, nCycles)
 	if nCycles == 1 {
-		uNames[0] = name
+		uNames[0] = string(name)
 	} else {
 		for i := range uNames {
 			uNames[i] = fmt.Sprintf("%s@%d", name, i)
@@ -345,6 +396,7 @@ func ConvertDesign(des EdifList, nCycles uint) QmasmMacroUse {
 	return QmasmMacroUse{
 		MacroName: string(AsSymbol(cRef[1])),
 		UseNames:  uNames,
+		Comment:   comment,
 	}
 }
 
