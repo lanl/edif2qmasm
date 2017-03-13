@@ -215,14 +215,10 @@ func ConvertNet(net EdifList, iface map[EdifSymbol]struct{}) []QmasmCode {
 	// Treat a renamed net as a comment.
 	_, comment := nameAndComment(net[1])
 
-	// Return one or more QMASM chains/pins.
+	// Define a helper function that adds an alias where allowed.
 	nPorts := len(pInfo)
 	code := make([]QmasmCode, 0, (nPorts*(nPorts-1))/2)
-	special := map[string]bool{
-		"$GND.G": false,
-		"$VCC.P": true,
-	}
-	aliased := make(map[string]struct{}) // Already-aliased variables
+	aliased := make(map[string]string) // Already-aliased variables
 	addAlias := func(comment, iName, jName string) {
 		// Add aliases for external interfaces.
 		if comment == "" || comment == iName || comment == jName {
@@ -236,9 +232,40 @@ func ConvertNet(net EdifList, iface map[EdifSymbol]struct{}) []QmasmCode {
 				Alias: comment,
 				Var:   iName,
 			})
-			aliased[comment] = struct{}{}
+			aliased[comment] = iName
 			return
 		}
+	}
+
+	// Define a helper function that says if two names refer to the same
+	// variable.
+	sameVariable := func(name1, name2 string) bool {
+		// Expand name1.
+		for {
+			if nm, found := aliased[name1]; found {
+				name1 = nm
+			} else {
+				break
+			}
+		}
+
+		// Expand name2.
+		for {
+			if nm, found := aliased[name2]; found {
+				name2 = nm
+			} else {
+				break
+			}
+		}
+
+		// Return true if the expanded names are equal.
+		return name1 == name2
+	}
+
+	// Return one or more QMASM chains/pins.
+	special := map[string]bool{
+		"$GND.G": false,
+		"$VCC.P": true,
 	}
 	for i := 0; i < nPorts-1; i++ {
 		for j := i + 1; j < nPorts; j++ {
@@ -257,10 +284,12 @@ func ConvertNet(net EdifList, iface map[EdifSymbol]struct{}) []QmasmCode {
 				// Neither port is VCC or GND.
 				iName := i_prefix + pInfo[i].Name
 				jName := j_prefix + pInfo[j].Name
-				code = append(code, QmasmChain{
-					Var:     [2]string{iName, jName},
-					Comment: comment,
-				})
+				if !sameVariable(iName, jName) {
+					code = append(code, QmasmChain{
+						Var:     [2]string{iName, jName},
+						Comment: comment,
+					})
+				}
 				addAlias(comment, iName, jName)
 
 			case i_pinned && !j_pinned:
