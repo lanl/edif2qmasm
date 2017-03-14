@@ -40,7 +40,7 @@ import (
 
 var notify *log.Logger // Help notify the user of warnings and errors.
 
- // Empty is a zero-byte type for defining and manipulating sets.
+// Empty is a zero-byte type for defining and manipulating sets.
 type Empty struct{}
 
 func main() {
