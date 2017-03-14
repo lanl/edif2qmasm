@@ -1,6 +1,8 @@
 edif2qmasm
 ==========
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/lanl/edif2qmasm)](https://goreportcard.com/report/github.com/lanl/edif2qmasm)
+
 Description
 -----------
 
