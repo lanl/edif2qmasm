@@ -910,7 +910,7 @@ func (p *parser) read() {
 	}
 
 	if rn == utf8.RuneError {
-		if n == 1 {
+		if n > 0 {
 			p.addErr(errInvalidEncoding)
 		}
 	}

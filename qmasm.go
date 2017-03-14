@@ -25,9 +25,8 @@ type QmasmChain struct {
 func (c QmasmChain) String() string {
 	if c.Comment == "" {
 		return fmt.Sprintf("%s = %s\n", c.Var[0], c.Var[1])
-	} else {
-		return fmt.Sprintf("%s = %s  # %s\n", c.Var[0], c.Var[1], c.Comment)
 	}
+	return fmt.Sprintf("%s = %s  # %s\n", c.Var[0], c.Var[1], c.Comment)
 }
 
 // A QmasmAlias indicates that a single variable should have two names.
@@ -42,9 +41,8 @@ type QmasmAlias struct {
 func (c QmasmAlias) String() string {
 	if c.Comment == "" {
 		return fmt.Sprintf("%s <-> %s\n", c.Alias, c.Var)
-	} else {
-		return fmt.Sprintf("%s <-> %s  # %s\n", c.Alias, c.Var, c.Comment)
 	}
+	return fmt.Sprintf("%s <-> %s  # %s\n", c.Alias, c.Var, c.Comment)
 }
 
 // A QmasmMacroDef represents a QMASM macro definition.
@@ -131,7 +129,6 @@ func (p QmasmPin) String() string {
 	}
 	if p.Comment == "" {
 		return fmt.Sprintf("%s := %s\n", p.Var, b2s[p.Value])
-	} else {
-		return fmt.Sprintf("%s := %s  # %s\n", p.Var, b2s[p.Value], p.Comment)
 	}
+	return fmt.Sprintf("%s := %s  # %s\n", p.Var, b2s[p.Value], p.Comment)
 }

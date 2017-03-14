@@ -8,7 +8,7 @@ import (
 )
 
 // isFlipFlop indicates that a given macro name represents a flip-flop.
-var isFlipFlop map[EdifSymbol]bool = make(map[EdifSymbol]bool)
+var isFlipFlop = make(map[EdifSymbol]bool)
 
 // Given a list of the form (<anything> <name>) or (<anything> (rename
 // <name> <comment>)), extract and return <name> and <comment>.
@@ -188,7 +188,7 @@ func PortRefFlipFlopPort(pRef EdifList) string {
 }
 
 // ConvertNet converts an EDIF net to a QMASM chain ("=").
-func ConvertNet(net EdifList, iface map[EdifSymbol]struct{}) []QmasmCode {
+func ConvertNet(net EdifList, iface map[EdifSymbol]Empty) []QmasmCode {
 	// Keep track of port names and flip-flop status.
 	type PortInfo struct {
 		Name   string
@@ -269,21 +269,21 @@ func ConvertNet(net EdifList, iface map[EdifSymbol]struct{}) []QmasmCode {
 	}
 	for i := 0; i < nPorts-1; i++ {
 		for j := i + 1; j < nPorts; j++ {
-			i_val, i_pinned := special[pInfo[j].Name]
-			j_val, j_pinned := special[pInfo[i].Name]
-			i_prefix := ""
+			iVal, iPinned := special[pInfo[j].Name]
+			jVal, jPinned := special[pInfo[i].Name]
+			iPrefix := ""
 			if pInfo[j].FFPort == "Q" {
-				i_prefix = "!next."
+				iPrefix = "!next."
 			}
-			j_prefix := ""
+			jPrefix := ""
 			if pInfo[i].FFPort == "Q" {
-				i_prefix = "!next."
+				iPrefix = "!next."
 			}
 			switch {
-			case !i_pinned && !j_pinned:
+			case !iPinned && !jPinned:
 				// Neither port is VCC or GND.
-				iName := i_prefix + pInfo[i].Name
-				jName := j_prefix + pInfo[j].Name
+				iName := iPrefix + pInfo[i].Name
+				jName := jPrefix + pInfo[j].Name
 				if !sameVariable(iName, jName) {
 					code = append(code, QmasmChain{
 						Var:     [2]string{iName, jName},
@@ -292,19 +292,19 @@ func ConvertNet(net EdifList, iface map[EdifSymbol]struct{}) []QmasmCode {
 				}
 				addAlias(comment, iName, jName)
 
-			case i_pinned && !j_pinned:
+			case iPinned && !jPinned:
 				// Only port i is VCC or GND.
 				code = append(code, QmasmPin{
 					Var:     pInfo[i].Name,
-					Value:   i_val,
+					Value:   iVal,
 					Comment: comment,
 				})
 
-			case !i_pinned && j_pinned:
+			case !iPinned && jPinned:
 				// Only port j is VCC or GND.
 				code = append(code, QmasmPin{
 					Var:     pInfo[j].Name,
-					Value:   j_val,
+					Value:   jVal,
 					Comment: comment,
 				})
 
@@ -318,7 +318,7 @@ func ConvertNet(net EdifList, iface map[EdifSymbol]struct{}) []QmasmCode {
 
 // ParseInterface extracts a cell interface and parses it into a set of port
 // names.
-func ParseInterface(cell EdifList) map[EdifSymbol]struct{} {
+func ParseInterface(cell EdifList) map[EdifSymbol]Empty {
 	// Find the interface.
 	ifs := cell.NestedSublistsByName([]EdifSymbol{"view", "interface"})
 	if len(ifs) != 1 {
@@ -326,13 +326,13 @@ func ParseInterface(cell EdifList) map[EdifSymbol]struct{} {
 	}
 
 	// Process each port in the interface in turn.
-	pNames := make(map[EdifSymbol]struct{}, len(ifs[0])-1)
+	pNames := make(map[EdifSymbol]Empty, len(ifs[0])-1)
 	for _, p := range ifs[0][1:] {
 		port := AsList(p, 3, "port")
 		switch port[1].Type() {
 		case Symbol:
 			// Single bit
-			pNames[AsSymbol(port[1])] = struct{}{}
+			pNames[AsSymbol(port[1])] = Empty{}
 
 		case List:
 			pList := port[1].(EdifList)
@@ -347,7 +347,7 @@ func ParseInterface(cell EdifList) map[EdifSymbol]struct{} {
 				}
 				for i := 0; i < aLen; i++ {
 					sym := fmt.Sprintf("%s[%d]", base, i)
-					pNames[EdifSymbol(sym)] = struct{}{}
+					pNames[EdifSymbol(sym)] = Empty{}
 				}
 
 			case "rename":
@@ -356,7 +356,7 @@ func ParseInterface(cell EdifList) map[EdifSymbol]struct{} {
 				if comment != "" {
 					sym = EdifSymbol(sym)
 				}
-				pNames[sym] = struct{}{}
+				pNames[sym] = Empty{}
 
 			default:
 				notify.Fatalf("Failed to parse a port list of type %q", AsSymbol(pList[0]))

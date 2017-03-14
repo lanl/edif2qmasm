@@ -23,32 +23,32 @@ type EdifSExp interface {
 // An EdifSymbol represents a raw EDIF symbol.
 type EdifSymbol string
 
-// The type of an EdifSymbol is Symbol.
+// Type indicates that the type of an EdifSymbol is Symbol.
 func (s EdifSymbol) Type() SExpType { return Symbol }
 
 // An EdifString represents a quoted EDIF string.
 type EdifString string
 
-// The type of an EdifString is String.
+// Type indicates that the type of an EdifString is String.
 func (s EdifString) Type() SExpType { return String }
 
 // An EdifInteger represents an EDIF integer.
 type EdifInteger int
 
-// The type of an EdifInteger is Integer.
+// Type indicates that the type of an EdifInteger is Integer.
 func (s EdifInteger) Type() SExpType { return Integer }
 
 // An EdifList represents a list of EDIF s-expressions.
 type EdifList []EdifSExp
 
-// The type of an EdifList is List.
-func (s EdifList) Type() SExpType { return List }
+// Type indicates that the type of an EdifList is List.
+func (l EdifList) Type() SExpType { return List }
 
 // AsSymbol asserts that an s-expression is a symbol, returning it if it is but
 // aborting the program if it's not.
 func AsSymbol(s EdifSExp) EdifSymbol {
 	if s.Type() != Symbol {
-		notify.Fatalf("Expected a Symbol but received a %s (%v)", s.Type(), s)
+		notify.Fatalf("Expected a Symbol but received a %v (%v)", s.Type(), s)
 	}
 	return s.(EdifSymbol)
 }
@@ -57,7 +57,7 @@ func AsSymbol(s EdifSExp) EdifSymbol {
 // not.
 func AsString(s EdifSExp) EdifString {
 	if s.Type() != String {
-		notify.Fatalf("Expected a String but received a %s (%v)", s.Type(), s)
+		notify.Fatalf("Expected a String but received a %v (%v)", s.Type(), s)
 	}
 	return s.(EdifString)
 }
@@ -66,7 +66,7 @@ func AsString(s EdifSExp) EdifString {
 // not.
 func AsInteger(s EdifSExp) EdifInteger {
 	if s.Type() != Integer {
-		notify.Fatalf("Expected an Integer but received a %s (%v)", s.Type(), s)
+		notify.Fatalf("Expected an Integer but received a %v (%v)", s.Type(), s)
 	}
 	return s.(EdifInteger)
 }
@@ -76,7 +76,7 @@ func AsInteger(s EdifSExp) EdifInteger {
 // Otherwise, it aborts the program.
 func AsList(s EdifSExp, minElts int, keyw EdifSymbol) EdifList {
 	if s.Type() != List {
-		notify.Fatalf("Expected a [%s ...] List but received a %s (%v)", keyw, s.Type(), s)
+		notify.Fatalf("Expected a [%s ...] List but received a %v (%v)", keyw, s.Type(), s)
 	}
 	lst := s.(EdifList)
 	if len(lst) < minElts {
