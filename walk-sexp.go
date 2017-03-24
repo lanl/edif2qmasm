@@ -414,6 +414,9 @@ func ConvertDesign(des EdifList, nCycles uint) QmasmMacroUse {
 	}
 	cRef := AsList(des[2], 3, "cellRef")
 	name, comment := nameAndComment(des[1])
+	if comment != "" {
+		name = EdifSymbol(comment)
+	}
 	uNames := make([]string, nCycles)
 	if nCycles == 1 {
 		uNames[0] = string(name)
@@ -425,7 +428,6 @@ func ConvertDesign(des EdifList, nCycles uint) QmasmMacroUse {
 	return QmasmMacroUse{
 		MacroName: string(AsSymbol(cRef[1])),
 		UseNames:  uNames,
-		Comment:   comment,
 	}
 }
 
