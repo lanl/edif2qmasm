@@ -70,7 +70,7 @@ with contents like the following::
 
 This can then be run conveniently from the command line::
 
-    yosys mycircuit.v synth.ys -b edif -o mycircuit.eduf
+    yosys mycircuit.v synth.ys -b edif -o mycircuit.edif
 
 SEE ALSO
 ========
