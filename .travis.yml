@@ -1,0 +1,23 @@
+sudo: false
+
+language: go
+
+go:
+  - 1.8.x
+  - master
+
+addons:
+  apt:
+    packages:
+      - python-docutils
+
+install:
+  - go get golang.org/x/tools/cmd/goimports
+  - go get golang.org/x/tools/cmd/stringer
+  - go get github.com/PuerkitoBio/pigeon
+
+# Attempt both a user build and a maintainer build.
+script:
+  - make
+  - make maintainer-clean
+  - make
