@@ -1,7 +1,7 @@
 edif2qmasm
 ==========
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/lanl/edif2qmasm)](https://goreportcard.com/report/github.com/lanl/edif2qmasm)
+[![Build Status](https://travis-ci.org/lanl/edif2qmasm.svg?branch=master)](https://travis-ci.org/lanl/edif2qmasm) [![Go Report Card](https://goreportcard.com/badge/github.com/lanl/edif2qmasm)](https://goreportcard.com/report/github.com/lanl/edif2qmasm)
 
 Description
 -----------
