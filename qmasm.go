@@ -132,3 +132,47 @@ func (p QmasmPin) String() string {
 	}
 	return fmt.Sprintf("%s := %s  # %s\n", p.Var, b2s[p.Value], p.Comment)
 }
+
+// QmasmCodeList is a slice of QmasmCode lines.
+type QmasmCodeList []QmasmCode
+
+// sortPriority maps a QmasmCode to an integer representing its sort priority.
+// Only QmasmCode types we expect to find within a macro definition are
+// included here.  Anything else aborts with an internal error.
+func sortPriority(q QmasmCode) int {
+	switch q.(type) {
+	case QmasmMacroUse:
+		return 0
+	case QmasmAlias:
+		return 1
+	case QmasmChain:
+		return 2
+	default:
+		notify.Fatalf("Internal error assigning a priority to %#v", q)
+	}
+	return 100 // Will never get here
+}
+
+// Len returns the length of a QmasmCodeList.  It is used to implement
+// sort.Interface.
+func (qcl QmasmCodeList) Len() int { return len(qcl) }
+
+// Less says if one QmasmCode line is less than another.  It is used to
+// implement sort.Interface.
+func (qcl QmasmCodeList) Less(i, j int) bool {
+	// Sort first by priority then by string representation.
+	ip := sortPriority(qcl[i])
+	jp := sortPriority(qcl[j])
+	switch {
+	case ip < jp:
+		return true
+	case ip > jp:
+		return false
+	default:
+		return qcl[i].String() < qcl[j].String()
+	}
+}
+
+// Swap swaps two elements of a QmasmCodeList.  It is used to
+// implement sort.Interface.
+func (qcl QmasmCodeList) Swap(i, j int) { qcl[i], qcl[j] = qcl[j], qcl[i] }

@@ -5,6 +5,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 )
 
 // isFlipFlop indicates that a given macro name represents a flip-flop.
@@ -228,6 +229,9 @@ func ConvertNet(net EdifList, iface map[EdifSymbol]Empty) []QmasmCode {
 			return
 		}
 		if _, ext := iface[EdifSymbol(comment)]; ext {
+			// Here, we might be aliasing two variables we've
+			// already chained together.  That's okay; ConvertCell
+			// will discard the chain in favor of the alias.
 			code = append(code, QmasmAlias{
 				Alias: comment,
 				Var:   iName,
@@ -380,7 +384,7 @@ func ConvertCell(cell EdifList, i2n map[EdifSymbol]EdifString) QmasmMacroDef {
 	iface := ParseInterface(cell)
 
 	// Instantiate all the other cells used by the current cell.
-	code := make([]QmasmCode, 0, 32)
+	code := make(QmasmCodeList, 0, 32)
 	for _, inst := range cell.NestedSublistsByName([]EdifSymbol{
 		"view",
 		"contents",
@@ -398,11 +402,31 @@ func ConvertCell(cell EdifList, i2n map[EdifSymbol]EdifString) QmasmMacroDef {
 		code = append(code, ConvertNet(net, iface)...)
 	}
 
+	// Sort the body code.  Then remove chains of variables that are
+	// already aliased.  For example, if we've already seen the alias "A
+	// <-> B", then remove the chain "A = B" (and "B = A").
+	sort.Sort(code)
+	filteredCode := make(QmasmCodeList, 0, len(code))
+	aliased := make(map[string]string)
+	for _, qc := range code {
+		switch qc := qc.(type) {
+		case QmasmAlias:
+			aliased[qc.Alias] = qc.Var
+			filteredCode = append(filteredCode, qc)
+		case QmasmChain:
+			if aliased[qc.Var[0]] != qc.Var[1] && aliased[qc.Var[1]] != qc.Var[0] {
+				filteredCode = append(filteredCode, qc)
+			}
+		default:
+			filteredCode = append(filteredCode, qc)
+		}
+	}
+
 	// Wrap the code in a QMASM macro definition and return it.
 	cName, cComment := nameAndComment(cell[1])
 	return QmasmMacroDef{
 		Name:    string(cName),
-		Body:    code,
+		Body:    filteredCode,
 		Comment: cComment,
 	}
 }
