@@ -147,6 +147,8 @@ func sortPriority(q QmasmCode) int {
 		return 1
 	case QmasmChain:
 		return 2
+	case QmasmPin:
+		return 3
 	default:
 		notify.Fatalf("Internal error assigning a priority to %#v", q)
 	}
