@@ -8,7 +8,8 @@
 VSOURCES = \
 	circsat.v \
 	map-color.v \
-	mult.v
+	mult.v \
+	max-cut.v
 
 EDIFS = $(patsubst %.v, %.edif, $(VSOURCES))
 QMASMS = $(patsubst %.v, %.qmasm, $(VSOURCES))

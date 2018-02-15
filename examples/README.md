@@ -147,6 +147,129 @@ Claim #1:  3 *  5 = 15 [YES] -- 42 @ -460.75
 Claim #2:  5 *  3 = 15 [YES] -- 53 @ -460.75
 ```
 
+Maximum cut
+-----------
+
+The maximum-cut, or max-cut,  decision problem is:
+
+> Given a graph *G* and an integer *k*, is there is a cut of size at least *k* in *G*?
+
+We solve this for the following, hard-wired graph (taken from https://en.wikipedia.org/wiki/Maximum_cut):
+
+![Maximum-cut example](https://upload.wikimedia.org/wikipedia/commons/c/cf/Max-cut.svg)
+
+We label the vertices *A* through *E* in top-to-bottom, left-to-right order.  As the figure shows, the maximum cut of 5 is found when *A* and *E* are colored white and *B*, *C*, and *D* are colored black.  As with many of the examples on this page, the code is run backward from `valid` being `True` to a Boolean coloring of `a` through `e`:
+```bash
+$ edif2qmasm max-cut.edif | qmasm --run --values=ints --pin="maxcut.valid := true"
+# maxcut.a --> 525
+# maxcut.b --> 901
+# maxcut.c --> 635
+# maxcut.cut[0] --> 33
+# maxcut.cut[1] --> 541
+# maxcut.cut[2] --> 130 133 141
+# maxcut.d --> 323 419 515
+# maxcut.e --> 366
+# maxcut.valid --> 1079
+Solution #1 (energy = -494.58, tally = 1):
+
+    Name          Binary  Decimal
+    ------------  ------  -------
+    maxcut.a           1        1
+    maxcut.b           0        0
+    maxcut.c           0        0
+    maxcut.cut       010        2
+    maxcut.d           0        0
+    maxcut.e           0        0
+    maxcut.valid       1        1
+
+Solution #2 (energy = -494.58, tally = 1):
+
+    Name          Binary  Decimal
+    ------------  ------  -------
+    maxcut.a           0        0
+    maxcut.b           1        1
+    maxcut.c           0        0
+    maxcut.cut       010        2
+    maxcut.d           0        0
+    maxcut.e           0        0
+    maxcut.valid       1        1
+```
+
+The `friendly-maxcut` script post-processes QMASM's output into a more human-readable form:
+```bash
+$ edif2qmasm max-cut.edif | qmasm --run --values=ints --pin="maxcut.valid := true" | ./friendly-maxcut 
+# maxcut.a --> 525
+# maxcut.b --> 901
+# maxcut.c --> 635
+# maxcut.cut[0] --> 33
+# maxcut.cut[1] --> 541
+# maxcut.cut[2] --> 130 133 141
+# maxcut.d --> 323 419 515
+# maxcut.e --> 366
+# maxcut.valid --> 1079
+Claim #1: | C | A B D E | 2 >= 2 with tally = 1 and energy = -495.58 [YES]
+Claim #2: | C | A B D E | 2 >= 3 with tally = 1 and energy = -495.58 [NO]
+```
+
+More interesting usage is to specify the minimum cut size, `cut`.  In our sample graph, the maximum cut one can make is 5 (binary 101):
+```bash
+$ edif2qmasm max-cut.edif | qmasm --run --values=ints --pin="maxcut.valid := true" --pin="maxcut.cut[2:0] := 101" | ./friendly-maxcut 
+# maxcut.a --> 387 483 579 583 591
+# maxcut.b --> 936 940
+# maxcut.c --> 290 294
+# maxcut.cut[0] --> 747
+# maxcut.cut[1] --> 435
+# maxcut.cut[2] --> 597 600 605
+# maxcut.d --> 211
+# maxcut.e --> 374
+# maxcut.valid --> 906
+Claim #1: | A | B C D E | 3 >= 5 with tally = 1 and energy = -465.58 [NO]
+Claim #2: | A C | B D E | 3 >= 5 with tally = 1 and energy = -465.58 [NO]
+```
+
+You may need to use either `--all-solns` or `--postproc=opt` to increase the likelihood of receiving a correct solution:
+```bash
+$ edif2qmasm max-cut.edif | qmasm --run --values=ints --pin="maxcut.valid := true" --pin="maxcut.cut[2:0] := 101" --all-solns | ./friendly-maxcut 
+# maxcut.a --> 387 483 579 583 591
+# maxcut.b --> 936 940
+# maxcut.c --> 290 294
+# maxcut.cut[0] --> 747
+# maxcut.cut[1] --> 435
+# maxcut.cut[2] --> 597 600 605
+# maxcut.d --> 211
+# maxcut.e --> 374
+# maxcut.valid --> 906
+Claim #1: | C | A B D E | 2 >= 5 with tally = 1 and energy = -466.08 [NO]
+Claim #2: | B | A C D E | 2 >= 5 with tally = 1 and energy = -465.42 [NO]
+Claim #3: | | A B C D E | 0 >= 5 with tally = 2 and energy = -465.42 [NO]
+Claim #4: | B C D | A E | 5 >= 5 with tally = 1 and energy = -465.08 [YES]
+Claim #5: | D | A B C E | 3 >= 5 with tally = 1 and energy = -465.08 [NO]
+Claim #6: | A D | B C E | 4 >= 5 with tally = 1 and energy = -465.08 [NO]
+Claim #7: | A C | B D E | 3 >= 5 with tally = 1 and energy = -464.58 [NO]
+Claim #8: | C D | A B E | 3 >= 5 with tally = 1 and energy = -464.58 [NO]
+Claim #9: | A B | C D E | 3 >= 5 with tally = 1 and energy = -464.08 [NO]
+Claim #10: | B D | A C E | 5 >= 5 with tally = 1 and energy = -464.08 [YES]
+Claim #11: | D E | A B C | 3 >= 5 with tally = 1 and energy = -464.08 [NO]
+Claim #12: | A | B C D E | 3 >= 5 with tally = 1 and energy = -464.08 [NO]
+Claim #13: | E | A B C D | 2 >= 5 with tally = 1 and energy = -463.58 [NO]
+Claim #14: | A B C | D E | 3 >= 5 with tally = 1 and energy = -463.08 [NO]
+Claim #15: | A C D | B E | 2 >= 5 with tally = 1 and energy = -461.08 [NO]
+$ edif2qmasm max-cut.edif | qmasm --run --values=ints --pin="maxcut.valid := true" --pin="maxcut.cut[2:0] := 101" --postproc=opt | ./friendly-maxcut 
+# maxcut.a --> 387 483 579 583 591
+# maxcut.b --> 936 940
+# maxcut.c --> 290 294
+# maxcut.cut[0] --> 747
+# maxcut.cut[1] --> 435
+# maxcut.cut[2] --> 597 600 605
+# maxcut.d --> 211
+# maxcut.e --> 374
+# maxcut.valid --> 906
+Claim #1: | B C D | A E | 5 >= 5 with tally = 4 and energy = -467.58 [YES]
+Claim #2: | A E | B C D | 5 >= 5 with tally = 7 and energy = -467.58 [YES]
+Claim #3: | B D | A C E | 5 >= 5 with tally = 9 and energy = -467.58 [YES]
+Claim #4: | A C E | B D | 5 >= 5 with tally = 8 and energy = -467.58 [YES]
+```
+
 Map coloring
 ------------
 

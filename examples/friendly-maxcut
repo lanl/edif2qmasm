@@ -1,0 +1,65 @@
+#! /usr/bin/env perl
+
+##########################################################
+# Postprocess QMASM's output when run on max-cut.edif to #
+# show the max-cut output in a more user-friendly manner #
+#                                                        #
+# By Scott Pakin <pakin@lanl.gov>                        #
+##########################################################
+
+use warnings;
+use strict;
+
+my ($soln, $energy, $tally, $cut, $have_data) = (0) x 5;
+my @verts = (0) x 5;
+while (my $line = <>) {
+    chomp $line;
+    if ($line =~ /Solution \#(\d+) \(energy = (-?[\d.]+), tally = (\d+)\):/) {
+        # Reset the graph for each solution.
+        ($soln, $energy, $tally) = ($1, $2, $3);
+        $cut = $have_data = 0;
+	@verts = (0) x 5;
+        next;
+    }
+    if ($line =~ /maxcut\.([a-e])\s.*(True|1)\s*$/) {
+	$verts[ord($1) - ord("a")] = 1;
+	$have_data = 1;
+	next;
+    }
+    if ($line =~ /maxcut\.cut\[(\d+)\].*True/) {
+	$cut |= 1<<$1;
+	$have_data = 1;
+	next;
+    }
+    if ($line =~ /maxcut\.cut\s.*(\d+)\s*$/) {
+	$cut = $1;
+	$have_data = 1;
+	next;
+    }
+    next if $line =~ /maxcut\./;
+    if ($have_data) {
+	# End of a table -- output what we have.
+	printf "Claim \#%d: |", $soln;
+	foreach my $i (0 .. $#verts) {
+	    if ($verts[$i]) {
+		printf " %s", chr($i + ord("A"));
+	    }
+	}
+	print " |";
+	foreach my $i (0 .. $#verts) {
+	    if (!$verts[$i]) {
+		printf " %s", chr($i + ord("A"));
+	    }
+	}
+	my $truecut = (($verts[0] != $verts[1]) +
+		       ($verts[0] != $verts[2]) +
+		       ($verts[0] != $verts[3]) +
+		       ($verts[1] != $verts[4]) +
+		       ($verts[2] != $verts[3]) +
+		       ($verts[3] != $verts[4]));
+	printf " | %d >= %d with tally = %d and energy = %.2f [%s]\n",
+	    $truecut, $cut, $tally, $energy, $truecut >= $cut ? "YES" : "NO";
+	$have_data = 0;
+	next;
+    }
+}
