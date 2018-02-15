@@ -154,7 +154,7 @@ The maximum-cut, or max-cut,  decision problem is:
 
 > Given a graph *G* and an integer *k*, is there is a cut of size at least *k* in *G*?
 
-We solve this for the following, hard-wired graph (taken from https://en.wikipedia.org/wiki/Maximum_cut):
+[`max-cut.v`](https://github.com/lanl/edif2qmasm/blob/master/examples/max-cut.v) solves this for the following, hard-wired graph (taken from https://en.wikipedia.org/wiki/Maximum_cut):
 
 ![Maximum-cut example](https://upload.wikimedia.org/wikipedia/commons/c/cf/Max-cut.svg)
 
