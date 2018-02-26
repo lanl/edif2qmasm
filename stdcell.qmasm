@@ -15,6 +15,7 @@
 
 # Y = A AND B
 !begin_macro AND
+!assert Y = A&B
   A -0.5
   B -0.5
   Y  1
@@ -26,6 +27,7 @@
 
 # Y = A OR B
 !begin_macro OR
+!assert Y = A|B
   A  0.5
   B  0.5
   Y -1
@@ -37,11 +39,13 @@
 
 # Y = NOT A
 !begin_macro NOT
+!assert Y = !A
   A Y 1.0
 !end_macro NOT
 
 # Y = A XOR B
 !begin_macro XOR
+!assert Y = A^B
   A    0.5
   B   -0.5
   Y   -0.5
@@ -57,6 +61,7 @@
 
 # Y = S ? B : A
 !begin_macro MUX
+!assert Y = if S = 1 then B else A endif
   S    0.5
   A    0.25
   B   -0.25
@@ -87,6 +92,7 @@
 
 # Y = NOT (A AND B)
 !begin_macro NAND
+!assert Y = !(A&B)
   A -0.5
   B -0.5
   Y -1
@@ -98,6 +104,7 @@
 
 # Y = NOT (A OR B)
 !begin_macro NOR
+!assert Y = !(A|B)
   A 0.5
   B 0.5
   Y 1
@@ -109,6 +116,7 @@
 
 # Y = NOT (A XOR B)
 !begin_macro XNOR
+!assert Y = !(A^B)
   A    0.5
   B   -0.5
   Y    0.5
@@ -124,6 +132,7 @@
 
 # Y = NOT ((A AND B) OR C)
 !begin_macro AOI3
+!assert Y = !((A&B) | C)
   A    0.0000
   B   -0.3333
   C    0.3333
@@ -143,6 +152,7 @@
 
 # Y = NOT ((A AND B) OR (C AND D))
 !begin_macro AOI4
+!assert Y = !((A&B) | (C&D))
   A   -0.1667
   B   -0.1667
   C   -0.4167
@@ -176,6 +186,7 @@
 
 # Y = NOT ((A OR B) AND C)
 !begin_macro OAI3
+!assert Y = !((A|B) & C)
   A   -0.25
   B    0
   C   -0.75
@@ -194,6 +205,7 @@
 
 # Y = NOT ((A OR B) AND (C OR D))
 !begin_macro OAI4
+!assert Y = !((A|B) & (C|D))
   A    0.6667
   B   -0.3333
   C   -0.3333
