@@ -7,11 +7,12 @@ make
 ```
 to produce a `.edif` file from each `.v` file or use your favorite hardware-synthesis tool to perform the equivalent operation.
 
-`edif2qmasm` currently supports only a handful of gates (defined in [stdcell.qmasm](https://github.com/lanl/edif2qmasm/blob/master/stdcell.qmasm)) so all designs must be compiled to use only those gates.
+`edif2qmasm` supports only the following gates (defined in [stdcell.qmasm](https://github.com/lanl/edif2qmasm/blob/master/stdcell.qmasm)) so all designs must be compiled to use only these:
 
-* 1-input: NOT
-* 2-input: AND, OR, XOR
-* 3-input: MUX
+* 1-input: NOT, DFF_P, DFF_N
+* 2-input: AND, NAND, OR, NOR, XOR, XNOR
+* 3-input: MUX, AOI3, OIA3
+* 4-input: AOI4, OIA4
 
 The rest of this document describes each of the examples in turn.
 
