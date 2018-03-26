@@ -21,46 +21,25 @@ Description
 
 More precisely, `edif2qmasm` converts from the [EDIF](https://en.wikipedia.org/wiki/EDIF) netlist format, which can be output by various synthesis tools, to the [QMASM](https://github.com/lanl/qmasm) quantum macro assembly language. To date, `edif2qmasm` has been tested only with Verilog because there exist open-source compilers that convert Verilog to EDIF, and I don't know of an equivalent open-source tool that can convert VHDL to EDIF.
 
+Documentation
+-------------
+
+In addition to this file, two other sources of documentation are
+
+* [the `edif2qmasm` manual page](https://github.com/lanl/edif2qmasm/blob/master/edif2qmasm.rst) and
+* [the `README.md` file in the `examples` directory](https://github.com/lanl/edif2qmasm/blob/master/examples/README.md).
+
 Installation
 ------------
 
-`edif2qmasm` is written in [Go](https://golang.org/) and therefore depends upon a Go compiler to build.
-
-Note that `edif2qmasm` is of limited use withut a compiler than can produce EDIF netlists and [QMASM](https://github.com/lanl/qmasm), which executes the generated code on a D-Wave system.  To date, `edif2qmasm` has been tested only with the [Yosys Open SYnthesis Suite](http://www.clifford.at/yosys/), but reports of usage with other synthesis tools (successful or not) are welcome.
-
-There are two ways to build `edif2qmasm`: the `go get` approach and the `make` approach.
-
-### The `go get` approach
-
-Download, build, and install `edif2qmasm` (into your `$GOPATH/bin/` directory) with
-```bash
-go get github.com/lanl/edif2qmasm
-```
-
-You'll also need to copy `stdcell.qmasm` somewhere, say into `/usr/local/share/edif2qmasm/`.  Optionally, you can install the `edif2qmasm.1` man page, say into `/usr/local/share/man/man1/`.
-
-### The `make` approach
-
-As an alternative installation procedure, one can download the code explicitly and build it using the supplied `Makefile`:
-```bash
-git clone https://github.com/lanl/edif2qmasm.git
-cd edif2qmasm
-make
-make install
-```
-
-This approach is supported because it provides a few extra benefits over the simpler, `go get` approach:
-
-* `make clean` (and `make maintainer-clean`) can be used to clean up the build directory.
-* `make install` installs the binary, the standard-cell library (`stdcell.qmasm`), and the Unix man page into their standard locations
-* `make install` honors the `DESTDIR`, `prefix`, and similar variables, which can be used to override the default installation directories.
+`edif2qmasm` is written in [Go](https://golang.org/) and therefore depends upon a Go compiler to build.  See [the INSTALL file](https://github.com/lanl/edif2qmasm/blob/master/INSTALL.md) for build instructions.
 
 Usage
 -----
 
 `edif2qmasm` usage is straightforward:
 ```bash
-edif2qmasm myfile.edif > myfile.qmasm
+edif2qmasm -o myfile.qmasm myfile.edif
 ```
 If no input file is specified, `edif2qmasm` will read from the standard input device.  Run `edif2qmasm --help` for a list of available command-line options.
 
@@ -70,42 +49,12 @@ export QMASMPATH=/usr/local/share/edif2qmasm:$QMASMPATH
 ```
 replacing `/usr/local` with whatever installation prefix you used.
 
-Documentation
--------------
-
-In addition to this file, two other sources of documentation are
-
-* [the `edif2qmasm` manual page](https://github.com/lanl/edif2qmasm/blob/master/edif2qmasm.rst) and
-* [the `README.md` file in the `examples` directory](https://github.com/lanl/edif2qmasm/blob/master/examples/README.md).
-
 Limitations
 -----------
 
 `edif2qmasm` has only limited support for sequential logic.  Sequential logic is implemented by replicating the entire circuit once per clock cycle for a compile-time specified number of clock cycles (cf. the `--cycles` command-line option).  Clocked flip-flops are supported, but unclocked latches are not.
 
 The resulting QMASM programs are not very robust in that the minimum-energy solutions do not consistently represent a correct execution when run on D-Wave hardware.  Running QMASM with `--postproc=opt` helps substantially.  Other suggestions on how to improve robustness are welcome.
-
-Notes for developers
---------------------
-
-If you want to modify `edif2qmasm` and rebuild it, you'll need a few additional tools.  The program's build process requires [`goimports`](https://godoc.org/golang.org/x/tools/cmd/goimports), [`stringer`](https://godoc.org/golang.org/x/tools/cmd/stringer), and the [Pigeon parser generator](https://godoc.org/github.com/PuerkitoBio/pigeon).  These can be installed from the command line with
-```bash
-go get golang.org/x/tools/cmd/goimports
-go get golang.org/x/tools/cmd/stringer
-go get github.com/PuerkitoBio/pigeon
-```
-Once these dependencies are satisfied, `edif2qmasm` can be rebuilt with
-```bash
-go generate
-go build
-go install
-```
-
-or
-```bash
-make
-make install
-```
 
 License
 -------
