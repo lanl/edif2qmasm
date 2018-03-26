@@ -7,7 +7,7 @@ convert EDIF netlists to QMASM source files
 -------------------------------------------
 
 :Author: pakin@lanl.gov
-:Date: 2016-11-22
+:Date: 2018-03-26
 :Copyright: BSD
 :Version: 1.0
 :Manual section: 1
@@ -15,7 +15,7 @@ convert EDIF netlists to QMASM source files
 SYNOPSIS
 ========
 
-    edif2qmasm infile.edif > outfile.qmasm
+    **edif2qmasm** [-o *outfile.qmasm*] [--cycles=\ *N*] *infile.edif*
 
 DESCRIPTION
 ===========
@@ -30,8 +30,24 @@ like **yosys** to compile the HDL code to EDIF format.  **edif2qmasm**
 can then be run on the result, and the resulting QMASM code can be fed
 to **qmasm** for execution on a D-Wave system::
 
-    edif2qmasm something.edif > something.qmasm
+    edif2qmasm -o something.qmasm something.edif
     qmasm --run something.qmasm
+
+Optionally, these steps can be combined into a single shell pipeline:
+
+    edif2qmasm something.edif | qmasm --run
+
+OPTIONS
+=======
+
+``-o`` *file.qmasm*, ``--output=``\ *file.qmasm*
+  Specify the name of the QMASM file to generate.  The default is to
+  write QMASM code to the standard output device.
+
+``--cycles=``\ *N*
+  Replicate the entire circuit *N* times.  This is used to support
+  sequential logic, which needs to be statically unrolled once per
+  cycle for QMASM execution.
 
 NOTES
 =====
