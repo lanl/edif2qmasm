@@ -26,7 +26,7 @@ Installation
 
 `edif2qmasm` is written in [Go](https://golang.org/) and therefore depends upon a Go compiler to build.
 
-Note that `edif2qmasm` is of limited use withut a compiler than can produce EDIF netlists and [QMASM](https://github.com/lanl/qmasm), which executes the generated code on a D-Wave system.  To date, `edif2qmasm` has been tested only with the [Yosys Open SYnthesis Suite](http://www.clifford.at/yosys/), but reports of usage with other synthesis tools (successful or not) are welcome.  Note that QMASM relies on D-Wave's proprietary libraries to operate.
+Note that `edif2qmasm` is of limited use withut a compiler than can produce EDIF netlists and [QMASM](https://github.com/lanl/qmasm), which executes the generated code on a D-Wave system.  To date, `edif2qmasm` has been tested only with the [Yosys Open SYnthesis Suite](http://www.clifford.at/yosys/), but reports of usage with other synthesis tools (successful or not) are welcome.
 
 There are two ways to build `edif2qmasm`: the `go get` approach and the `make` approach.
 
@@ -62,7 +62,7 @@ Usage
 ```bash
 edif2qmasm myfile.edif > myfile.qmasm
 ```
-If no input file is specified, `edif2qmasm` will read from the standard input device.  There are not currently any command-line options.
+If no input file is specified, `edif2qmasm` will read from the standard input device.  Run `edif2qmasm --help` for a list of available command-line options.
 
 To run the generated code with QMASM, you'll need to point it to the `edif2qmasm` standard-cell library.  In Bash, enter
 ```bash
@@ -81,9 +81,9 @@ In addition to this file, two other sources of documentation are
 Limitations
 -----------
 
-Only combinational logic is supported by the current version of `edif2qmasm`.  I hope to add support for sequential logic in a future version.
+`edif2qmasm` has only limited support for sequential logic.  Sequential logic is implemented by replicating the entire circuit once per clock cycle for a compile-time specified number of clock cycles (cf. the `--cycles` command-line option).  Clocked flip-flops are supported, but unclocked latches are not.
 
-The resulting QMASM programs are not very robust in that the minimum-energy solutions do not consistently represent a correct execution when run on D-Wave hardware.  Suggestions on how to improve robustness are welcome.
+The resulting QMASM programs are not very robust in that the minimum-energy solutions do not consistently represent a correct execution when run on D-Wave hardware.  Running QMASM with `--postproc=opt` helps substantially.  Other suggestions on how to improve robustness are welcome.
 
 Notes for developers
 --------------------
