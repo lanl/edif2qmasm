@@ -17,7 +17,7 @@ RST2MAN = rst2man
 
 all: edif2qmasm stdcell.qmasm edif2qmasm.1
 
-VERSION = 1.0
+VERSION = 1.1
 
 GEN_SOURCES = \
 	parse-edif.go \

@@ -9,7 +9,7 @@ convert EDIF netlists to QMASM source files
 :Author: pakin@lanl.gov
 :Date: 2018-03-26
 :Copyright: BSD
-:Version: 1.0
+:Version: 1.1
 :Manual section: 1
 
 SYNOPSIS
