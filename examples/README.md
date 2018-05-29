@@ -198,7 +198,7 @@ Solution #2 (energy = -494.58, tally = 1):
 
 The `friendly-maxcut` script post-processes QMASM's output into a more human-readable form:
 ```bash
-$ edif2qmasm max-cut.edif | qmasm --run --values=ints --pin="maxcut.valid := true" | ./friendly-maxcut 
+$ edif2qmasm max-cut.edif | qmasm --run --values=ints --pin="maxcut.valid := true" | ./friendly-maxcut
 # maxcut.a --> 525
 # maxcut.b --> 901
 # maxcut.c --> 635
@@ -214,7 +214,7 @@ Claim #2: | C | A B D E | 2 >= 3 with tally = 1 and energy = -495.58 [NO]
 
 More interesting usage is to specify the minimum cut size, `cut`.  In our sample graph, the maximum cut one can make is 5 (binary 101):
 ```bash
-$ edif2qmasm max-cut.edif | qmasm --run --values=ints --pin="maxcut.valid := true" --pin="maxcut.cut[2:0] := 101" | ./friendly-maxcut 
+$ edif2qmasm max-cut.edif | qmasm --run --values=ints --pin="maxcut.valid := true" --pin="maxcut.cut[2:0] := 101" | ./friendly-maxcut
 # maxcut.a --> 387 483 579 583 591
 # maxcut.b --> 936 940
 # maxcut.c --> 290 294
@@ -230,7 +230,7 @@ Claim #2: | A C | B D E | 3 >= 5 with tally = 1 and energy = -465.58 [NO]
 
 You may need to use either `--all-solns` or `--postproc=opt` to increase the likelihood of receiving a correct solution:
 ```bash
-$ edif2qmasm max-cut.edif | qmasm --run --values=ints --pin="maxcut.valid := true" --pin="maxcut.cut[2:0] := 101" --all-solns | ./friendly-maxcut 
+$ edif2qmasm max-cut.edif | qmasm --run --values=ints --pin="maxcut.valid := true" --pin="maxcut.cut[2:0] := 101" --all-solns | ./friendly-maxcut
 # maxcut.a --> 387 483 579 583 591
 # maxcut.b --> 936 940
 # maxcut.c --> 290 294
@@ -255,7 +255,7 @@ Claim #12: | A | B C D E | 3 >= 5 with tally = 1 and energy = -464.08 [NO]
 Claim #13: | E | A B C D | 2 >= 5 with tally = 1 and energy = -463.58 [NO]
 Claim #14: | A B C | D E | 3 >= 5 with tally = 1 and energy = -463.08 [NO]
 Claim #15: | A C D | B E | 2 >= 5 with tally = 1 and energy = -461.08 [NO]
-$ edif2qmasm max-cut.edif | qmasm --run --values=ints --pin="maxcut.valid := true" --pin="maxcut.cut[2:0] := 101" --postproc=opt | ./friendly-maxcut 
+$ edif2qmasm max-cut.edif | qmasm --run --values=ints --pin="maxcut.valid := true" --pin="maxcut.cut[2:0] := 101" --postproc=opt | ./friendly-maxcut
 # maxcut.a --> 387 483 579 583 591
 # maxcut.b --> 936 940
 # maxcut.c --> 290 294
@@ -784,4 +784,125 @@ Claim #10: EC=3 GC=2 MC=0 QC=1 WC=0 --> True with tally = 1 and energy = -492.25
 Claim #11: EC=2 GC=1 MC=0 QC=3 WC=0 --> True with tally = 2 and energy = -492.25 [YES]
 Claim #12: EC=2 GC=3 MC=0 QC=3 WC=0 --> True with tally = 3 and energy = -492.25 [YES]
 Claim #13: EC=2 GC=3 MC=0 QC=3 WC=1 --> True with tally = 1 and energy = -492.25 [YES]
+```
+
+Fizz Buzz
+---------
+
+In [`fizzbuzz.v`](https://github.com/lanl/edif2qmasm/blob/master/examples/fizzbuzz.v) we present, primarily for entertainment value, an implementation of "Quantum FizzBuzz".  [Fizz Buzz](https://en.wikipedia.org/wiki/Fizz_buzz) is a children's game in which players, seated in a circle, count off sequentially.  However, in place of each number that is a multiple of three a player must say "fizz"; in place of each number that is a multiple of five a player must say "buzz"; and in place of each number that is a multiple of both three and five a player must say "fizz buzz".  That is, the first twenty numbers are to be called out as follows:
+
+> 1, 2, fizz, 4, buzz, fizz, 7, 8, fizz, buzz, 11, fizz, 13, 14, fizz buzz, 16, 17, fizz, 19, buzz
+
+The code inputs a 7-bit number `fizzbuzz.n` and reports in outputs `fizzbuzz.fizz` and `fizzbuzz.buzz` whether that number is a multiple of 3, 5, both, or neither.  For example, the number 78 (binary 1001110) is a multiple of 3 but not 5:
+
+```bash
+$ edif2qmasm fizzbuzz.edif | qmasm --run -O1 --postproc=opt --values=ints --pin="fizzbuzz.n[6:0] := 1001110"
+# fizzbuzz.buzz --> 852
+# fizzbuzz.fizz --> 659
+# fizzbuzz.n[0] --> 473 478 560 564 569 572 656 752 848
+# fizzbuzz.n[1] --> 118 122 126 127 134 142 150 158 166 170 174 179 182 275 371
+# fizzbuzz.n[2] --> 56 152 156 157 248 252 344 440 536
+# fizzbuzz.n[3] --> 114 210 302 305 306 308 310 316 324 332 336 340 401 402 432 439 447 448 455 498 544 594 640 736 741 832
+# fizzbuzz.n[4] --> 387 483 579
+# fizzbuzz.n[5] --> 920 924 1004 1012 1016 1020
+# fizzbuzz.n[6] --> 1008 1013 1015
+Solution #1 (energy = -124.13, tally = 2):
+
+    Name           Binary   Decimal
+    -------------  -------  -------
+    fizzbuzz.buzz        0        0
+    fizzbuzz.fizz        1        1
+    fizzbuzz.n     1001110       78
+```
+
+Note that the problem is sufficiently large that `--postproc=opt` was needed to nudge the results returned by the hardware towards a correct solution.
+
+Implementing Fizz Buzz for, say, the numbers 1 through 100, is a question commonly asked at interviews for programmer positions.  Given enough samples, [`fizzbuzz.v`](https://github.com/lanl/edif2qmasm/blob/master/examples/fizzbuzz.v) should report all numbers in the range [0, 127] (not likely in order, however):
+
+```bash
+$ edif2qmasm fizzbuzz.edif | qmasm --run -O1 --postproc=opt --values=ints --samples=100000
+# fizzbuzz.buzz --> 272
+# fizzbuzz.fizz --> 101
+# fizzbuzz.n[0] --> 5 13 21 29 37 45 53 61 69 77 85
+# fizzbuzz.n[1] --> 105 109 120 201 208 211 214 216 222 230 238 297 301 304 309
+# fizzbuzz.n[2] --> 328 405 413 419 421 424 425 429 437 515 521 617 713 809 905 1001
+# fizzbuzz.n[3] --> 168 245 253 261 264 269 360 456 486 489 494 497 501 502 509 517 525 533 541 549 552 557 585 648 744 840 844 852 933 936 941 1032 1110 1118 1126 1128 1134
+# fizzbuzz.n[4] --> 889 891 892
+# fizzbuzz.n[5] --> 745 750 835 839 841 847
+# fizzbuzz.n[6] --> 748 752 756 848 854
+Solution #1 (energy = -124.63, tally = 56):
+
+    Name           Binary   Decimal
+    -------------  -------  -------
+    fizzbuzz.buzz        0        0
+    fizzbuzz.fizz        0        0
+    fizzbuzz.n     0000100        4
+
+Solution #2 (energy = -124.63, tally = 67):
+
+    Name           Binary   Decimal
+    -------------  -------  -------
+    fizzbuzz.buzz        1        1
+    fizzbuzz.fizz        0        0
+    fizzbuzz.n     0000101        5
+```
+<span style="text-align: center">…</span>
+```bash
+Solution #128 (energy = -124.63, tally = 71):
+
+    Name           Binary   Decimal
+    -------------  -------  -------
+    fizzbuzz.buzz        0        0
+    fizzbuzz.fizz        0        0
+    fizzbuzz.n     0111110       62
+```
+
+Unlike a typical Fizz Buzz implementation, ours can also be used, for example, to output only fizz-buzz numbers:
+
+```bash
+$ edif2qmasm fizzbuzz.edif | qmasm --run -O1 --postproc=opt --values=ints --samples=10000 --pin="fizzbuzz.fizz := true" --pin="fizzbuzz.buzz := true" | grep fizzbuzz.n | sort
+# fizzbuzz.buzz --> 635
+# fizzbuzz.fizz --> 205
+# fizzbuzz.n[0] --> 208 212 304 400 496 536 592 597 605 613 621 629 632 633 637
+# fizzbuzz.n[1] --> 64 68 160 246 254 256 262 270 278 352 358 359
+# fizzbuzz.n[2] --> 147 221 229 237 243 245 339 435 436 437 445 448 453 531 532 533 534 544 627
+# fizzbuzz.n[3] --> 33 39 47 55 63 71 79 129 225 321 327 401 409 417 495 497 503 505 511 513 519 527 535 543 551 559 609 705 801 897 901
+# fizzbuzz.n[4] --> 911
+# fizzbuzz.n[5] --> 841 845 853 861 937
+# fizzbuzz.n[6] --> 842 844
+    fizzbuzz.n     0000000        0
+    fizzbuzz.n     0001111       15
+    fizzbuzz.n     0011110       30
+    fizzbuzz.n     0101101       45
+    fizzbuzz.n     0111100       60
+    fizzbuzz.n     1001011       75
+    fizzbuzz.n     1011010       90
+    fizzbuzz.n     1101001      105
+    fizzbuzz.n     1111000      120
+```
+
+or, for a particularly contrived example, fizz numbers in which both bits 2 and 5 are True:
+
+```bash
+$ edif2qmasm fizzbuzz.edif | qmasm --run -O1 --postproc=opt --values=ints --samples=10000 --pin="fizzbuzz.fizz fizzbuzz.n[5] fizzbuzz.n[2] := 111" | grep fizzbuzz.n | sort
+# fizzbuzz.buzz --> 830
+# fizzbuzz.fizz --> 979 1075
+# fizzbuzz.n[0] --> 816 888 894 902 910 912 918 926 984 1078 1080 1086
+# fizzbuzz.n[1] --> 300 304 308 314 316 410 412 506 602 606 698 794 890 986
+# fizzbuzz.n[2] --> 715 811 813 907 1003 1004 1005 1012 1020
+# fizzbuzz.n[3] --> 136 140 141 232 235 236 244 331 427 523 591 592 599 607 615 619 623 631 639 642 647 738 834 838 930
+# fizzbuzz.n[4] --> 434 437 530 626 629
+# fizzbuzz.n[5] --> 58 154
+# fizzbuzz.n[6] --> 156
+    fizzbuzz.n     0100100       36
+    fizzbuzz.n     0100111       39
+    fizzbuzz.n     0101101       45
+    fizzbuzz.n     0110110       54
+    fizzbuzz.n     0111100       60
+    fizzbuzz.n     0111111       63
+    fizzbuzz.n     1100110      102
+    fizzbuzz.n     1101100      108
+    fizzbuzz.n     1101111      111
+    fizzbuzz.n     1110101      117
+    fizzbuzz.n     1111110      126
 ```
