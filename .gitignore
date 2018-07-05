@@ -2,6 +2,8 @@ edif2qmasm
 edif2qmasm-*.tar.gz
 examples/circsat.edif
 examples/circsat.qmasm
+examples/fizzbuzz.edif
+examples/fizzbuzz.qmasm
 examples/map-color.edif
 examples/map-color.qmasm
 examples/max-cut.edif
