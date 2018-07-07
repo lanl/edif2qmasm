@@ -56,7 +56,13 @@ func main() {
 	outName := "-"
 	flag.StringVar(&outName, "output", "-", "name of QMASM output file or \"-\" for stdout")
 	flag.StringVar(&outName, "o", "-", "same as -output")
+	var noTop bool
+	flag.BoolVar(&noTop, "strip-top", false, "strip off the name of the top-level module")
+	flag.BoolVar(&noTop, "t", false, "same as -strip-top")
 	flag.Parse()
+	if *nCycles > 1 && noTop {
+		notify.Fatalf("-trim-top cannot be used with -cycles=%d", *nCycles)
+	}
 
 	// Open the input file.
 	var r io.Reader
@@ -99,7 +105,7 @@ func main() {
 	}
 
 	// Convert the s-expression to QMASM source code.
-	code := ConvertEdifToQmasm(top, *nCycles)
+	code := ConvertEdifToQmasm(top, *nCycles, noTop)
 	for _, q := range code {
 		fmt.Fprintf(out, "%s", q)
 	}
