@@ -817,92 +817,116 @@ Solution #1 (energy = -124.13, tally = 2):
 
 Note that the problem is sufficiently large that `--postproc=opt` was needed to nudge the results returned by the hardware towards a correct solution.
 
+It can be tedious having to spell out `fizzbuzz` every time we want to pin a value to one of the variables defined in the `fizzbuzz` module.  `edif2qmasm` provides a `--strip-top` (or `-t` for short) option that strips off this top-level namespace:
+
+```bash
+$ edif2qmasm --strip-top fizzbuzz.edif | qmasm --run -O1 --postproc=opt --values=ints --pin="n[6:0] := 1001110"
+# buzz --> 282
+# fizz --> 275
+# n[0] --> 146 149 274 277 278 286
+# n[1] --> 313 319 441 457 569 574 576 582 584 585 590 598 606 609 614 712 718 737 865 993 1121 1249 1377 1380 1505 1633 1637
+# n[2] --> 928 932 940 1056 1184 1188 1196 1204 1212 1220 1312
+# n[3] --> 533 536 541 549 557 563 565 573 581 589 593 597 691 721 819 820 821 828 947 1075 1203 1331 1459 1587 1588 1715 1843
+# n[4] --> 1488 1495
+# n[5] --> 1759 1767 1775 1783
+# n[6] --> 1773
+Solution #1 (energy = -148.29, tally = 4):
+
+    Name  Binary   Decimal
+    ----  -------  -------
+    buzz        0        0
+    fizz        1        1
+    n     1001110       78
+```
+
+This also makes the output clearer by reporting results in terms of `buzz`, `fizz`, and `n` instead of `fizzbuzz.buzz`, `fizzbuzz.fizz`, and `fizzbuzz.n`.
+
 Implementing Fizz Buzz for, say, the numbers 1 through 100, is a question commonly asked at interviews for programmer positions.  Given enough samples, [`fizzbuzz.v`](https://github.com/lanl/edif2qmasm/blob/master/examples/fizzbuzz.v) should report all numbers in the range [0, 127] (not likely in order, however):
 
 ```bash
-$ edif2qmasm fizzbuzz.edif | qmasm --run -O1 --postproc=opt --values=ints --samples=100000
-# fizzbuzz.buzz --> 272
-# fizzbuzz.fizz --> 101
-# fizzbuzz.n[0] --> 5 13 21 29 37 45 53 61 69 77 85
-# fizzbuzz.n[1] --> 105 109 120 201 208 211 214 216 222 230 238 297 301 304 309
-# fizzbuzz.n[2] --> 328 405 413 419 421 424 425 429 437 515 521 617 713 809 905 1001
-# fizzbuzz.n[3] --> 168 245 253 261 264 269 360 456 486 489 494 497 501 502 509 517 525 533 541 549 552 557 585 648 744 840 844 852 933 936 941 1032 1110 1118 1126 1128 1134
-# fizzbuzz.n[4] --> 889 891 892
-# fizzbuzz.n[5] --> 745 750 835 839 841 847
-# fizzbuzz.n[6] --> 748 752 756 848 854
-Solution #1 (energy = -124.63, tally = 56):
+$ edif2qmasm --strip-top fizzbuzz.edif | qmasm --run -O1 --postproc=opt --values=ints --samples=100000
+# buzz --> 288
+# fizz --> 445
+# n[0] --> 295 297 303 304 305 311 433
+# n[1] --> 673 801 806 929 1057 1185 1188 1196 1313
+# n[2] --> 423 431 439 447 451 455 573 579 581 707 835 963 1091 1219 1347 1475 1603 1731 1859 1987 1989 1997 2005 2013 2021 2029
+# n[3] --> 542 550 558 566 574 582 590 598 606 614 619 622 747 875 1003 1007 1131 1133 1259 1387 1391 1515 1643 1644
+# n[4] --> 1274
+# n[5] --> 1233 1235 1237 1245
+# n[6] --> 1376 1382 1481 1504 1609 1613 1616 1621 1632 1744 1760 1872 1877 1885 1888 1893
+Solution #1 (energy = -135.96, tally = 49):
 
-    Name           Binary   Decimal
-    -------------  -------  -------
-    fizzbuzz.buzz        0        0
-    fizzbuzz.fizz        0        0
-    fizzbuzz.n     0000100        4
+    Name  Binary   Decimal
+    ----  -------  -------
+    buzz        1        1
+    fizz        1        1
+    n     0000000        0
 
-Solution #2 (energy = -124.63, tally = 67):
+Solution #2 (energy = -135.96, tally = 14):
 
-    Name           Binary   Decimal
-    -------------  -------  -------
-    fizzbuzz.buzz        1        1
-    fizzbuzz.fizz        0        0
-    fizzbuzz.n     0000101        5
+    Name  Binary   Decimal
+    ----  -------  -------
+    buzz        0        0
+    fizz        0        0
+    n     1000000       64
 ```
 <span style="text-align: center">…</span>
 ```bash
-Solution #128 (energy = -124.63, tally = 71):
+Solution #128 (energy = -135.96, tally = 47):
 
-    Name           Binary   Decimal
-    -------------  -------  -------
-    fizzbuzz.buzz        0        0
-    fizzbuzz.fizz        0        0
-    fizzbuzz.n     0111110       62
+    Name  Binary   Decimal
+    ----  -------  -------
+    buzz        0        0
+    fizz        0        0
+    n     1111111      127
 ```
 
 Unlike a typical Fizz Buzz implementation, ours can also be used, for example, to output only fizz-buzz numbers:
 
 ```bash
-$ edif2qmasm fizzbuzz.edif | qmasm --run -O1 --postproc=opt --values=ints --samples=10000 --pin="fizzbuzz.fizz := true" --pin="fizzbuzz.buzz := true" | grep fizzbuzz.n | sort
-# fizzbuzz.buzz --> 635
-# fizzbuzz.fizz --> 205
-# fizzbuzz.n[0] --> 208 212 304 400 496 536 592 597 605 613 621 629 632 633 637
-# fizzbuzz.n[1] --> 64 68 160 246 254 256 262 270 278 352 358 359
-# fizzbuzz.n[2] --> 147 221 229 237 243 245 339 435 436 437 445 448 453 531 532 533 534 544 627
-# fizzbuzz.n[3] --> 33 39 47 55 63 71 79 129 225 321 327 401 409 417 495 497 503 505 511 513 519 527 535 543 551 559 609 705 801 897 901
-# fizzbuzz.n[4] --> 911
-# fizzbuzz.n[5] --> 841 845 853 861 937
-# fizzbuzz.n[6] --> 842 844
-    fizzbuzz.n     0000000        0
-    fizzbuzz.n     0001111       15
-    fizzbuzz.n     0011110       30
-    fizzbuzz.n     0101101       45
-    fizzbuzz.n     0111100       60
-    fizzbuzz.n     1001011       75
-    fizzbuzz.n     1011010       90
-    fizzbuzz.n     1101001      105
-    fizzbuzz.n     1111000      120
+$ edif2qmasm --strip-top fizzbuzz.edif | qmasm --run -O1 --postproc=opt --values=ints --samples=10000 --pin="fizz := true" --pin="buzz := true" | grep " n " | sort
+# buzz --> 1762
+# fizz --> 1749
+# n[0] --> 1873 1876 1884 1892
+# n[1] --> 1195 1196 1200 1202 1204 1209 1212 1216 1220 1337 1340 1344 1351
+# n[2] --> 1444 1450 1452 1456 1460 1468 1476 1484 1490 1492 1498 1500 1618
+# n[3] --> 465 593 721 830 838 841 846 849 854 856 858 862 870 977
+# n[4] --> 426
+# n[5] --> 273 401 529 532
+# n[6] --> 657
+    n     0000000        0
+    n     0001111       15
+    n     0011110       30
+    n     0101101       45
+    n     0111100       60
+    n     1001011       75
+    n     1011010       90
+    n     1101001      105
+    n     1111000      120
 ```
 
 or, for a particularly contrived example, fizz numbers in which both bits 2 and 5 are True:
 
 ```bash
-$ edif2qmasm fizzbuzz.edif | qmasm --run -O1 --postproc=opt --values=ints --samples=10000 --pin="fizzbuzz.fizz fizzbuzz.n[5] fizzbuzz.n[2] := 111" | grep fizzbuzz.n | sort
-# fizzbuzz.buzz --> 830
-# fizzbuzz.fizz --> 979 1075
-# fizzbuzz.n[0] --> 816 888 894 902 910 912 918 926 984 1078 1080 1086
-# fizzbuzz.n[1] --> 300 304 308 314 316 410 412 506 602 606 698 794 890 986
-# fizzbuzz.n[2] --> 715 811 813 907 1003 1004 1005 1012 1020
-# fizzbuzz.n[3] --> 136 140 141 232 235 236 244 331 427 523 591 592 599 607 615 619 623 631 639 642 647 738 834 838 930
-# fizzbuzz.n[4] --> 434 437 530 626 629
-# fizzbuzz.n[5] --> 58 154
-# fizzbuzz.n[6] --> 156
-    fizzbuzz.n     0100100       36
-    fizzbuzz.n     0100111       39
-    fizzbuzz.n     0101101       45
-    fizzbuzz.n     0110110       54
-    fizzbuzz.n     0111100       60
-    fizzbuzz.n     0111111       63
-    fizzbuzz.n     1100110      102
-    fizzbuzz.n     1101100      108
-    fizzbuzz.n     1101111      111
-    fizzbuzz.n     1110101      117
-    fizzbuzz.n     1111110      126
+$ edif2qmasm --strip-top fizzbuzz.edif | qmasm --run -O1 --postproc=opt --values=ints --samples=10000 --pin="fizz n[5] n[2] := 111" | grep " n " | sort
+# buzz --> 1867
+# fizz --> 1846
+# n[0] --> 1858 1860 1861 1862 1863
+# n[1] --> 203 331 459 587 715 843 953 958 966 971 974 1081 1099 1215 1217 1221 1223 1227 1229 1231
+# n[2] --> 817 820 821 829 923 945 1051 1053 1061 1066 1069 1073 1077 1085 1093 1101 1109 1112 1117
+# n[3] --> 211 214 339 467 475 595 603 678 681 686 694 702 710 718 722 723 726 731 734 742 809 850 978 1106 1234 1324 1332 1340 1348 1356 1362 1364
+# n[4] --> 192
+# n[5] --> 422 425 430 553
+# n[6] --> 295
+    n     0100100       36
+    n     0100111       39
+    n     0101101       45
+    n     0110110       54
+    n     0111100       60
+    n     0111111       63
+    n     1100110      102
+    n     1101100      108
+    n     1101111      111
+    n     1110101      117
+    n     1111110      126
 ```
