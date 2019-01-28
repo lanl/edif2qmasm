@@ -10,8 +10,8 @@
 # library.
 
 # Constants for power and ground.
-!alias VCC true
-!alias GND false
+!let VCC := true
+!let GND := false
 
 # Y = A AND B
 !begin_macro AND
