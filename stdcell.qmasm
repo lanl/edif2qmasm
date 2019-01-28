@@ -83,11 +83,13 @@
 # Q = D (clock is ignored)
 !begin_macro DFF_P
   Q = D
+  C := VCC
 !end_macro DFF_P
 
 # Q = D (clock is ignored)
 !begin_macro DFF_N
   Q = D
+  C := VCC
 !end_macro DFF_N
 
 # Y = NOT (A AND B)
