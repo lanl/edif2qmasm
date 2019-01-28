@@ -27,7 +27,7 @@ edif: $(EDIFS)
 qmasm: $(QMASMS)
 
 %.qmasm: %.edif
-	$(E2Q) -o $@ $<
+	$(E2Q) --strip-top -o $@ $<
 
 clean:
 	$(RM) $(QMASMS)
