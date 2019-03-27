@@ -4,6 +4,16 @@ package main
 
 import "strconv"
 
+func _() {
+	// An "invalid array index" compiler error signifies that the constant values have changed.
+	// Re-run the stringer command to generate them again.
+	var x [1]struct{}
+	_ = x[Symbol-0]
+	_ = x[String-1]
+	_ = x[Integer-2]
+	_ = x[List-3]
+}
+
 const _SExpType_name = "SymbolStringIntegerList"
 
 var _SExpType_index = [...]uint8{0, 6, 12, 19, 23}

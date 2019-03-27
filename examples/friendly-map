@@ -21,7 +21,7 @@ while (my $line = <>) {
         %region2num = ();
         next;
     }
-    if ($line =~ /^\s+map_color\.(\w+)\[(\d+)\].*(True|False)/) {
+    if ($line =~ /^\s+(\w+)\[(\d+)\].*(True|False)/) {
         # Add a bit per line.
         my ($region, $bit, $bool) = ($1, $2, $3);
         my $base = $bool eq "True" ? 1 : 0;
@@ -29,7 +29,7 @@ while (my $line = <>) {
         $have_data = 1;
         next;
     }
-    if ($line =~ /^\s+map_color\.valid.*(True|False)/) {
+    if ($line =~ /^\s+valid.*(True|False)/) {
         # Store the valid bit.
         $valid = $1;
         $have_data = 1;
