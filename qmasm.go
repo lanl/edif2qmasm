@@ -204,9 +204,11 @@ func (qcl QmasmCodeList) SortAndMerge() QmasmCodeList {
 
 	// Sort the list then append a single, new QmasmRename element.
 	sort.Sort(qcl2)
-	qcl2 = append(qcl2, QmasmRename{
-		Before: before,
-		After:  after,
-	})
+	if len(before) > 0 {
+		qcl2 = append(qcl2, QmasmRename{
+			Before: before,
+			After:  after,
+		})
+	}
 	return qcl2
 }
