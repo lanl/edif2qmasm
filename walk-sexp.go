@@ -216,57 +216,9 @@ func ConvertNet(net EdifList, iface map[EdifSymbol]Empty) []QmasmCode {
 	// Treat a renamed net as a comment.
 	_, comment := nameAndComment(net[1])
 
-	// Define a helper function that adds an alias where allowed.
+	// Return one or more QMASM chains/pins.
 	nPorts := len(pInfo)
 	code := make([]QmasmCode, 0, (nPorts*(nPorts-1))/2)
-	aliased := make(map[string]string) // Already-aliased variables
-	addAlias := func(comment, iName, jName string) {
-		// Add aliases for external interfaces.
-		if comment == "" || comment == iName || comment == jName {
-			return
-		}
-		if _, seen := aliased[comment]; seen {
-			return
-		}
-		if _, ext := iface[EdifSymbol(comment)]; ext {
-			// Here, we might be aliasing two variables we've
-			// already chained together.  That's okay; ConvertCell
-			// will discard the chain in favor of the alias.
-			code = append(code, QmasmAlias{
-				Alias: comment,
-				Var:   iName,
-			})
-			aliased[comment] = iName
-			return
-		}
-	}
-
-	// Define a helper function that says if two names refer to the same
-	// variable.
-	sameVariable := func(name1, name2 string) bool {
-		// Expand name1.
-		for {
-			if nm, found := aliased[name1]; found {
-				name1 = nm
-			} else {
-				break
-			}
-		}
-
-		// Expand name2.
-		for {
-			if nm, found := aliased[name2]; found {
-				name2 = nm
-			} else {
-				break
-			}
-		}
-
-		// Return true if the expanded names are equal.
-		return name1 == name2
-	}
-
-	// Return one or more QMASM chains/pins.
 	special := map[string]bool{
 		"$GND.G": false,
 		"$VCC.P": true,
@@ -288,13 +240,12 @@ func ConvertNet(net EdifList, iface map[EdifSymbol]Empty) []QmasmCode {
 				// Neither port is VCC or GND.
 				iName := iPrefix + pInfo[i].Name
 				jName := jPrefix + pInfo[j].Name
-				if !sameVariable(iName, jName) {
+				if iName != jName {
 					code = append(code, QmasmChain{
 						Var:     [2]string{iName, jName},
 						Comment: comment,
 					})
 				}
-				addAlias(comment, iName, jName)
 
 			case iPinned && !jPinned:
 				// Only port i is VCC or GND.
