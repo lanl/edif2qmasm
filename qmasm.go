@@ -5,6 +5,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -117,6 +118,24 @@ func (p QmasmPin) String() string {
 	return fmt.Sprintf("%s := %s  # %s\n", p.Var, b2s[p.Value], p.Comment)
 }
 
+// A QmasmRename indicates that one list of variables should be renamed to
+// another list of variables.
+type QmasmRename struct {
+	Before []string // Old names
+	After  []string // New names
+}
+
+// String outputs a QmasmRename as a line of QMASM code, including a
+// training newline.  In practice, these will be batched and performed
+// as a single rename to support swapping.
+func (r QmasmRename) String() string {
+	lhs := fmt.Sprintf("%v", r.Before)
+	lhs = lhs[1 : len(lhs)-1]
+	rhs := fmt.Sprintf("%v", r.After)
+	rhs = rhs[1 : len(rhs)-1]
+	return fmt.Sprintf("%s -> %s\n", lhs, rhs)
+}
+
 // QmasmCodeList is a slice of QmasmCode lines.
 type QmasmCodeList []QmasmCode
 
@@ -160,3 +179,34 @@ func (qcl QmasmCodeList) Less(i, j int) bool {
 // Swap swaps two elements of a QmasmCodeList.  It is used to
 // implement sort.Interface.
 func (qcl QmasmCodeList) Swap(i, j int) { qcl[i], qcl[j] = qcl[j], qcl[i] }
+
+// SortAndMerge sorts a QmasmCodeList and merges all QmasmRename elements into
+// a single QmasmRename.  It returns a new QmasmCodeList.
+func (qcl QmasmCodeList) SortAndMerge() QmasmCodeList {
+	// Handle the trivial case first.
+	if len(qcl) == 0 {
+		return qcl
+	}
+
+	// Retain all elements except QmasmRename elements.
+	before := make([]string, 0, 4) // Old symbol names (4 is arbitrary)
+	after := make([]string, 0, 4)  // New symbol names (4 is arbitrary)
+	qcl2 := make(QmasmCodeList, 0, len(qcl))
+	for _, e := range qcl {
+		qr, isQR := e.(QmasmRename)
+		if !isQR {
+			qcl2 = append(qcl2, e)
+			continue
+		}
+		before = append(before, qr.Before...)
+		after = append(after, qr.After...)
+	}
+
+	// Sort the list then append a single, new QmasmRename element.
+	sort.Sort(qcl2)
+	qcl2 = append(qcl2, QmasmRename{
+		Before: before,
+		After:  after,
+	})
+	return qcl2
+}

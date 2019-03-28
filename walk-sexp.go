@@ -5,7 +5,7 @@ package main
 
 import (
 	"fmt"
-	"sort"
+	"regexp"
 )
 
 // isFlipFlop indicates that a given macro name represents a flip-flop.
@@ -188,6 +188,29 @@ func PortRefFlipFlopPort(pRef EdifList) string {
 	return ""
 }
 
+// arrayIndexRe matches an array element such as "foo[123]".  The first
+// capturing group is the array name, and the second is the index value.
+var arrayIndexRe = regexp.MustCompile(`^([^\[\]]+)\[(\d+)\]$`)
+
+// needsRenaming determines heuristically if a symbol and a comment refer to
+// different bits within the same bit vector.  This indicates an endianness
+// mismatch between the HDL and the netlist representation.  We will water
+// rename the symbol to match the HDL version.
+func needsRenaming(s, c string) bool {
+	if c == s {
+		return false
+	}
+	cai := arrayIndexRe.FindStringSubmatch(c)
+	if cai == nil {
+		return false
+	}
+	sai := arrayIndexRe.FindStringSubmatch(s)
+	if sai == nil {
+		return false
+	}
+	return cai[1] == sai[1] && cai[2] != sai[2] // Same name, different indices
+}
+
 // ConvertNet converts an EDIF net to a QMASM chain ("=").
 func ConvertNet(net EdifList, iface map[EdifSymbol]Empty) []QmasmCode {
 	// Keep track of port names and flip-flop status.
@@ -225,27 +248,30 @@ func ConvertNet(net EdifList, iface map[EdifSymbol]Empty) []QmasmCode {
 	}
 	for i := 0; i < nPorts-1; i++ {
 		for j := i + 1; j < nPorts; j++ {
-			iVal, iPinned := special[pInfo[j].Name]
-			jVal, jPinned := special[pInfo[i].Name]
+			iVal, iPinned := special[pInfo[i].Name]
 			iPrefix := ""
-			if pInfo[j].FFPort == "Q" {
-				iPrefix = "!next."
-			}
-			jPrefix := ""
 			if pInfo[i].FFPort == "Q" {
 				iPrefix = "!next."
+			}
+			jVal, jPinned := special[pInfo[j].Name]
+			jPrefix := ""
+			if pInfo[j].FFPort == "Q" {
+				jPrefix = "!next."
 			}
 			switch {
 			case !iPinned && !jPinned:
 				// Neither port is VCC or GND.
 				iName := iPrefix + pInfo[i].Name
 				jName := jPrefix + pInfo[j].Name
-				if iName != jName {
-					code = append(code, QmasmChain{
-						Var:     [2]string{iName, jName},
-						Comment: comment,
-					})
+				if iName == jName {
+					// I'm not convinced we'll ever get
+					// here in practice.
+					continue
 				}
+				code = append(code, QmasmChain{
+					Var:     [2]string{iName, jName},
+					Comment: comment,
+				})
 
 			case iPinned && !jPinned:
 				// Only port i is VCC or GND.
@@ -266,6 +292,26 @@ func ConvertNet(net EdifList, iface map[EdifSymbol]Empty) []QmasmCode {
 			default:
 				notify.Fatalf("Unexpected connection in net %v", net)
 			}
+		}
+	}
+
+	// Rename EDIF array accesses to HDL array accesses to account for
+	// endianness differences.
+	for i := 0; i < nPorts; i++ {
+		_, iPinned := special[pInfo[i].Name]
+		iPrefix := ""
+		if pInfo[i].FFPort == "Q" {
+			iPrefix = "!next."
+		}
+		if iPinned {
+			continue
+		}
+		iName := iPrefix + pInfo[i].Name
+		if needsRenaming(iName, comment) {
+			code = append(code, QmasmRename{
+				Before: []string{iName},
+				After:  []string{comment},
+			})
 		}
 	}
 	return code
@@ -354,7 +400,7 @@ func ConvertCell(cell EdifList, i2n map[EdifSymbol]EdifString) QmasmMacroDef {
 	}
 
 	// Sort the code, wrap it in a QMASM macro definition, and return it.
-	sort.Sort(code)
+	code = code.SortAndMerge()
 	cName, cComment := nameAndComment(cell[1])
 	return QmasmMacroDef{
 		Name:    string(cName),
