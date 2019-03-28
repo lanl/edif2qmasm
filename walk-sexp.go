@@ -239,13 +239,38 @@ func ConvertNet(net EdifList, iface map[EdifSymbol]Empty) []QmasmCode {
 	// Treat a renamed net as a comment.
 	_, comment := nameAndComment(net[1])
 
-	// Return one or more QMASM chains/pins.
+	// Rename EDIF array accesses to HDL array accesses to account for
+	// endianness differences.
 	nPorts := len(pInfo)
 	code := make([]QmasmCode, 0, (nPorts*(nPorts-1))/2)
 	special := map[string]bool{
 		"$GND.G": false,
 		"$VCC.P": true,
 	}
+	for i := 0; i < nPorts; i++ {
+		_, iPinned := special[pInfo[i].Name]
+		iPrefix := ""
+		if pInfo[i].FFPort == "Q" {
+			iPrefix = "!next."
+		}
+		if iPinned {
+			continue
+		}
+		iName := iPrefix + pInfo[i].Name
+		if needsRenaming(iName, comment) {
+			code = append(code, QmasmRename{
+				Before: []string{iName},
+				After:  []string{comment},
+			})
+		}
+	}
+	if len(code) > 0 {
+		// At least one symbol was renamed.  Alter the comment to make
+		// it more user-friendly.
+		comment = comment + " in the HDL"
+	}
+
+	// Return one or more QMASM chains/pins.
 	for i := 0; i < nPorts-1; i++ {
 		for j := i + 1; j < nPorts; j++ {
 			iVal, iPinned := special[pInfo[i].Name]
@@ -292,26 +317,6 @@ func ConvertNet(net EdifList, iface map[EdifSymbol]Empty) []QmasmCode {
 			default:
 				notify.Fatalf("Unexpected connection in net %v", net)
 			}
-		}
-	}
-
-	// Rename EDIF array accesses to HDL array accesses to account for
-	// endianness differences.
-	for i := 0; i < nPorts; i++ {
-		_, iPinned := special[pInfo[i].Name]
-		iPrefix := ""
-		if pInfo[i].FFPort == "Q" {
-			iPrefix = "!next."
-		}
-		if iPinned {
-			continue
-		}
-		iName := iPrefix + pInfo[i].Name
-		if needsRenaming(iName, comment) {
-			code = append(code, QmasmRename{
-				Before: []string{iName},
-				After:  []string{comment},
-			})
 		}
 	}
 	return code
