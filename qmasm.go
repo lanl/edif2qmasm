@@ -29,22 +29,6 @@ func (c QmasmChain) String() string {
 	return fmt.Sprintf("%s = %s  # %s\n", c.Var[0], c.Var[1], c.Comment)
 }
 
-// A QmasmAlias indicates that a single variable should have two names.
-type QmasmAlias struct {
-	Alias   string // New name
-	Var     string // Old name
-	Comment string // Optional comment
-}
-
-// String outputs a QmasmAlias as a line of QMASM code, including a training
-// newline.
-func (c QmasmAlias) String() string {
-	if c.Comment == "" {
-		return fmt.Sprintf("%s <-> %s\n", c.Alias, c.Var)
-	}
-	return fmt.Sprintf("%s <-> %s  # %s\n", c.Alias, c.Var, c.Comment)
-}
-
 // A QmasmMacroDef represents a QMASM macro definition.
 type QmasmMacroDef struct {
 	Name    string      // Macro name
@@ -143,12 +127,10 @@ func sortPriority(q QmasmCode) int {
 	switch q.(type) {
 	case QmasmMacroUse:
 		return 0
-	case QmasmAlias:
-		return 1
 	case QmasmChain:
-		return 2
+		return 1
 	case QmasmPin:
-		return 3
+		return 2
 	default:
 		notify.Fatalf("Internal error assigning a priority to %#v", q)
 	}
