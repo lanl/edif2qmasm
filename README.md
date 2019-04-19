@@ -29,6 +29,12 @@ In addition to this file, two other sources of documentation are
 * [the `edif2qmasm` manual page](https://github.com/lanl/edif2qmasm/blob/master/edif2qmasm.rst) and
 * [the `README.md` file in the `examples` directory](https://github.com/lanl/edif2qmasm/blob/master/examples/README.md).
 
+There also exists a peer-reviewed academic publication on `edif2qmasm` that describes the entire process of compiling Verilog programs to a D-Wave Hamiltonian function, explains how `edif2qmasm`'s standard-cell library was constructed, presents some use cases, and even includes a bit of analysis:
+
+> Scott Pakin.  "Targeting Classical Code to a Quantum Annealer".  In <em>Proceedings of the Twenty-Fourth International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS 2019)</em>, 13–17 April 2019, Providence, Rhode Island, USA, pp. 529–543.  ACM, New York, New York, USA.  ISBN: 978-1-4503-6240-5, DOI: [10.1145/3297858.3304071](https://doi.org/10.1145/3297858.3304071).
+
+Associated with the above is a [2-minute "lightning talk" video](https://youtu.be/jtFsujUM-4Q), which is essentially an advertisement to attend the talk (which was 16 April 2019) and read the paper.
+
 Installation
 ------------
 
