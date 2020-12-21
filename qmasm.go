@@ -210,5 +210,27 @@ func (qcl QmasmCodeList) SortAndMerge() QmasmCodeList {
 			After:  after,
 		})
 	}
-	return qcl2
+
+	// Elide duplicate QmasmPin elements.
+	qcl3 := make(QmasmCodeList, 0, len(qcl2))
+	prevQP := QmasmPin{}
+	for _, e := range qcl2 {
+		qp, isQP := e.(QmasmPin)
+		switch {
+		case !isQP:
+			// Not a QmasmPin: retain the element.
+			qcl3 = append(qcl3, e)
+		case qp.Var != prevQP.Var:
+			// Different QmasmPin: retain the element and remember it.
+			qcl3 = append(qcl3, e)
+			prevQP = qp
+		case qp.Value != prevQP.Value:
+			// Same pinned variable but different pinned value:
+			// abort with an error message.
+			notify.Fatalf("%s is pinned to both true and false", qp.Var)
+		default:
+			// Same variable and value: drop the duplicate element.
+		}
+	}
+	return qcl3
 }
