@@ -151,9 +151,8 @@ func sortPriority(q QmasmCode) int {
 	case QmasmPin:
 		return 2
 	default:
-		notify.Fatalf("Internal error assigning a priority to %#v", q)
+		panic(fmt.Sprintf("Internal error assigning a priority to %#v", q))
 	}
-	return 100 // Will never get here
 }
 
 // Len returns the length of a QmasmCodeList.  It is used to implement
