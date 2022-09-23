@@ -1,7 +1,7 @@
 edif2qmasm Examples
 ===================
 
-This directory contains a few examples written in [Verilog](https://en.wikipedia.org/wiki/Verilog) and a `Makefile` that compiles them to [EDIF](https://en.wikipedia.org/wiki/EDIF) netlists using the [Yosys Open SYnthesis Suite](http://www.clifford.at/yosys/).  Start by running
+This directory contains a few examples written in [Verilog](https://en.wikipedia.org/wiki/Verilog) and a `Makefile` that compiles them to [EDIF](https://en.wikipedia.org/wiki/EDIF) netlists using the [Yosys Open SYnthesis Suite](https://yosyshq.net/yosys/).  Start by running
 ```bash
 make
 ```

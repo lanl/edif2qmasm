@@ -38,7 +38,7 @@ Associated with the above is a [2-minute "lightning talk" video](https://youtu.b
 Installation
 ------------
 
-`edif2qmasm` is written in [Go](https://golang.org/) and therefore depends upon a Go compiler to build.  See [the INSTALL file](https://github.com/lanl/edif2qmasm/blob/master/INSTALL.md) for build instructions.
+`edif2qmasm` is written in [Go](https://go.dev/) and therefore depends upon a Go compiler to build.  See [the INSTALL file](https://github.com/lanl/edif2qmasm/blob/master/INSTALL.md) for build instructions.
 
 Usage
 -----

@@ -1,20 +1,20 @@
 edif2qmasm installation
 =======================
 
-`edif2qmasm` is written in [Go](https://golang.org/) and therefore depends upon a Go compiler to build.
+`edif2qmasm` is written in [Go](https://go.dev/) and therefore depends upon a Go compiler to build.
 
-Note that `edif2qmasm` is of limited use withut a compiler than can produce EDIF netlists and [QMASM](https://github.com/lanl/qmasm), which executes the generated code on a D-Wave system.  To date, `edif2qmasm` has been tested only with the [Yosys Open SYnthesis Suite](http://www.clifford.at/yosys/), but reports of usage with other synthesis tools (successful or not) are welcome.
+Note that `edif2qmasm` is of limited use withut a compiler than can produce EDIF netlists and [QMASM](https://github.com/lanl/qmasm), which executes the generated code on a D-Wave system.  To date, `edif2qmasm` has been tested only with the [Yosys Open SYnthesis Suite](https://yosyshq.net/yosys/), but reports of usage with other synthesis tools (successful or not) are welcome.
 
 User builds
 -----------
 
-There are two ways to build `edif2qmasm`: the `go get` approach and the `make` approach.
+There are two ways to build `edif2qmasm`: the `go install` approach and the `make` approach.
 
-### The `go get` approach
+### The `go install` approach
 
 Download, build, and install `edif2qmasm` (into your `$GOPATH/bin/` directory) with
 ```bash
-go get github.com/lanl/edif2qmasm
+go install github.com/lanl/edif2qmasm@latest
 ```
 
 You'll also need to copy `stdcell.qmasm` somewhere, say into `/usr/local/share/edif2qmasm/`.  Optionally, you can install the `edif2qmasm.1` man page, say into `/usr/local/share/man/man1/`.
@@ -29,7 +29,7 @@ make
 make install
 ```
 
-This approach is supported because it provides a few extra benefits over the simpler, `go get` approach:
+This approach is supported because it provides a few extra benefits over the simpler, `go install` approach:
 
 * `make clean` (and `make maintainer-clean`) can be used to clean up the build directory.
 * `make install` installs the binary, the standard-cell library (`stdcell.qmasm`), and the Unix man page into their standard locations
@@ -38,11 +38,11 @@ This approach is supported because it provides a few extra benefits over the sim
 Developer builds
 ----------------
 
-If you want to modify `edif2qmasm` and rebuild it, you'll need a few additional tools.  The program's build process requires [`goimports`](https://godoc.org/golang.org/x/tools/cmd/goimports), [`stringer`](https://godoc.org/golang.org/x/tools/cmd/stringer), and the [Pigeon parser generator](https://godoc.org/github.com/PuerkitoBio/pigeon).  These can be installed from the command line with
+If you want to modify `edif2qmasm` and rebuild it, you'll need a few additional tools.  The program's build process requires [`goimports`](https://pkg.go.dev/golang.org/x/tools/cmd/goimports), [`stringer`](https://pkg.go.dev/golang.org/x/tools/cmd/stringer), and the [Pigeon parser generator](https://pkg.go.dev/github.com/PuerkitoBio/pigeon).  These can be installed from the command line with
 ```bash
-go get golang.org/x/tools/cmd/goimports
-go get golang.org/x/tools/cmd/stringer
-go get github.com/PuerkitoBio/pigeon
+go install golang.org/x/tools/cmd/goimports@latest
+go install golang.org/x/tools/cmd/stringer@latest
+go install github.com/mna/pigeon@latest
 ```
 Once these dependencies are satisfied, `edif2qmasm` can be rebuilt with
 ```bash
